@@ -8,10 +8,10 @@ echo "  Starting ANNAM AI Engine Microservice"
 echo "========================================================"
 
 # Find Python executable
-if command -v python3 &>/dev/null; then
-    PY_EXEC="python3"
-elif command -v python &>/dev/null; then
+if command -v python &>/dev/null; then
     PY_EXEC="python"
+elif command -v python3 &>/dev/null; then
+    PY_EXEC="python3"
 elif command -v py &>/dev/null; then
     PY_EXEC="py"
 else
@@ -19,17 +19,32 @@ else
     exit 1
 fi
 
-# Initialize virtual environment if needed
-if [ ! -f "venv/Scripts/python.exe" ] && [ ! -f "venv/bin/python" ]; then
+# Create virtual environment if missing
+if [ ! -d "venv" ] || [ ! -f "venv/Scripts/python.exe" -a ! -f "venv/bin/python" ]; then
     echo "Creating virtual environment..."
     $PY_EXEC -m venv venv
-    if [ -f "venv/Scripts/pip.exe" ]; then
-        venv/Scripts/pip.exe install --only-binary :all: -r requirements.txt
-        venv/Scripts/python.exe data/generate_dummy_data.py
-    elif [ -f "venv/bin/pip" ]; then
-        venv/bin/pip install --only-binary :all: -r requirements.txt
-        venv/bin/python data/generate_dummy_data.py
-    fi
+fi
+
+# Set path to venv python and pip
+if [ -f "venv/Scripts/python.exe" ]; then
+    VENV_PY="venv/Scripts/python.exe"
+    VENV_PIP="venv/Scripts/pip.exe"
+elif [ -f "venv/bin/python" ]; then
+    VENV_PY="venv/bin/python"
+    VENV_PIP="venv/bin/pip"
+else
+    VENV_PY="$PY_EXEC"
+    VENV_PIP="pip"
+fi
+
+# Ensure all dependencies are installed
+echo "Checking and installing dependencies..."
+$VENV_PIP install -r requirements.txt
+
+# Ensure dummy data is generated if missing
+if [ ! -f "data/demand_history.csv" ]; then
+    echo "Generating initial dataset..."
+    $VENV_PY data/generate_dummy_data.py
 fi
 
 echo ""
@@ -37,10 +52,4 @@ echo "Starting FastAPI server at http://127.0.0.1:8001 ..."
 echo "Interactive Swagger Documentation: http://127.0.0.1:8001/docs"
 echo ""
 
-if [ -f "venv/Scripts/python.exe" ]; then
-    venv/Scripts/python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
-elif [ -f "venv/bin/python" ]; then
-    venv/bin/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
-else
-    $PY_EXEC -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
-fi
+$VENV_PY -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
