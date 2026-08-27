@@ -13,10 +13,26 @@ if ($occupied) {
     Start-Sleep -Seconds 1
 }
 
+# Auto-detect Python executable
+$pyCmd = "python"
+if (Get-Command py -ErrorAction SilentlyContinue) {
+    $pyCmd = "py"
+} elseif (Get-Command python3 -ErrorAction SilentlyContinue) {
+    $pyCmd = "python3"
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $pyCmd = "python"
+}
+
 if (-Not (Test-Path ".\venv\Scripts\python.exe")) {
-    Write-Host "Creating virtual environment..." -ForegroundColor Yellow
-    & "C:\Users\kalyaanasundar.a\AppData\Local\Programs\Python\Python314\python.exe" -m venv venv
-    & .\venv\Scripts\pip.exe install --only-binary :all: -r requirements.txt
+    Write-Host "Creating virtual environment using $pyCmd..." -ForegroundColor Yellow
+    & $pyCmd -m venv venv
+}
+
+Write-Host "Checking and installing dependencies..." -ForegroundColor Cyan
+& .\venv\Scripts\pip.exe install -r requirements.txt
+
+if (-Not (Test-Path ".\data\demand_history.csv")) {
+    Write-Host "Generating initial dataset..." -ForegroundColor Yellow
     & .\venv\Scripts\python.exe data\generate_dummy_data.py
 }
 
