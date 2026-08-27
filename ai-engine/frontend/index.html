@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANNAM — Agricultural Marketplace & AI Engine</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- ANNAM Master Design System Styles -->
+  <link rel="stylesheet" href="/static/css/global.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Mobile Backdrop -->
+  <div class="mobile-backdrop" id="mobileBackdrop"></div>
+
+  <!-- =========================================================================
+       1. SIDEBAR NAVIGATION
+       ========================================================================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <span>🌾 ANNAM</span>
+        <span class="sidebar-brand-badge">AI v0.2</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">AI & Intelligence (Member 4)</div>
+      <a href="#forecast" class="nav-item active" data-view="view-forecast">
+        <span>Demand Forecast</span>
+      </a>
+      <a href="#pooling" class="nav-item" data-view="view-pooling">
+        <span>Smart Supply Pooling</span>
+        <span class="nav-badge">Core</span>
+      </a>
+      <a href="#market-insights" class="nav-item" data-view="view-market-insights">
+        <span>Market Insights</span>
+      </a>
+      <a href="#recommendations" class="nav-item" data-view="view-recommendations">
+        <span>Recommendations</span>
+      </a>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="nav-section-title">System</div>
+      <a href="/docs" target="_blank" class="nav-item">
+        <span>Swagger API Docs</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">
+        <span>Microservice Port</span>
+        <strong style="color: var(--primary);">:8001 (Active)</strong>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       2. MAIN CONTENT WRAPPER
+       ========================================================================= -->
+  <div class="main-wrapper">
+    
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="top-nav-left">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">☰</button>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" placeholder="Search crops, farmers, mandis, or orders..." />
+        </div>
+      </div>
+
+      <div class="top-nav-right">
+        <!-- Live Status -->
+        <span class="badge badge-available" id="aiEngineStatusPill" style="padding: 6px 12px;">
+          <span class="badge-dot"></span> AI Engine Live (:8001)
+        </span>
+
+        <div class="nav-actions-group">
+          <div class="action-btn-wrapper">
+            <button class="top-action-btn" title="Notifications">
+              🔔
+              <span class="notification-dot"></span>
+            </button>
+          </div>
+          <button class="top-action-btn" title="Messages">💬</button>
+        </div>
+
+        <!-- User Profile Dropdown -->
+        <div style="position: relative;">
+          <div class="user-profile-menu" id="userProfileMenu">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+              <span class="user-name" id="currentUserName">Aishwarya</span>
+              <span class="user-role" id="currentUserRole">Role: Administrator</span>
+            </div>
+            <span style="font-size: 12px; color: var(--text-muted); margin-left: 4px;">▼</span>
+          </div>
+
+          <!-- Profile Dropdown Menu -->
+          <div class="dropdown-menu" id="profileDropdown">
+            <div class="dropdown-header">
+              <strong style="font-size: 14px; color: var(--dark);">Switch Role View</strong>
+              <p style="font-size: 11px; color: var(--text-secondary);">Test role-specific views for demo</p>
+            </div>
+            <a class="dropdown-item role-select-item" data-role="Administrator" data-name="Aishwarya">
+              <span>👑 Administrator</span>
+            </a>
+            <a class="dropdown-item role-select-item" data-role="Farmer" data-name="Ravi">
+              <span>👨‍🌾 Farmer (Ravi)</span>
+            </a>
+            <a class="dropdown-item role-select-item" data-role="Bulk Buyer" data-name="Karthik Enterprises">
+              <span>🏢 Bulk Buyer (Karthik)</span>
+            </a>
+            <a class="dropdown-item role-select-item" data-role="Logistics Provider" data-name="Murugan Transports">
+              <span>🚚 Logistics (Murugan)</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="/docs" target="_blank" class="dropdown-item">
+              <span>📖 API Specifications</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+
+      <!-- =====================================================================
+           VIEW 1: DEMAND FORECASTING (MEMBER 4)
+           ===================================================================== -->
+      <section class="view-section" id="view-forecast">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Demand Forecasting & Trends 📈</h1>
+            <p class="page-subtitle">AI predicts expected regional demand (kg) over the next 7–30 days to optimize farmer harvest timing.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" id="runForecastBtn">Refresh Forecast</button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+            <div class="form-group">
+              <label class="form-label">Produce</label>
+              <select class="form-control" id="forecastProductSelect">
+                <option value="Tomato" selected>🍅 Tomato</option>
+                <option value="Onion">🧅 Onion</option>
+                <option value="Potato">🥔 Potato</option>
+                <option value="Brinjal">🍆 Brinjal</option>
+                <option value="Cabbage">🥬 Cabbage</option>
+                <option value="Carrot">🥕 Carrot</option>
+                <option value="Rice">🌾 Rice</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Location / Mandi</label>
+              <select class="form-control" id="forecastLocationSelect">
+                <option value="Chennai" selected>Chennai</option>
+                <option value="Coimbatore">Coimbatore</option>
+                <option value="Madurai">Madurai</option>
+                <option value="Trichy">Trichy</option>
+                <option value="Salem">Salem</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Horizon</label>
+              <select class="form-control" id="forecastHorizonSelect">
+                <option value="7" selected>Next 7 Days</option>
+                <option value="14">Next 14 Days</option>
+                <option value="30">Next 30 Days</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forecast Results Grid -->
+        <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px; margin-bottom: 24px;">
+          <!-- Forecast KPI Visual Card -->
+          <div class="forecast-visual-box">
+            <div>
+              <span class="forecast-meta-label">Predicted Horizon Demand</span>
+              <div class="forecast-meta-val" id="forecastPredictedQty" style="font-size: 34px; margin-top: 4px;">Loading...</div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                <span>AI Confidence Score</span>
+                <strong id="forecastConfidence">--%</strong>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill confidence-bar-fill" id="forecastConfidenceBar" style="width: 80%;"></div>
+              </div>
+            </div>
+
+            <div class="forecast-meta-grid">
+              <div class="forecast-meta-item">
+                <span class="forecast-meta-label">Daily Avg Rate</span>
+                <span class="forecast-meta-val" id="forecastDailyAvg" style="font-size: 16px;">-- kg/day</span>
+              </div>
+              <div class="forecast-meta-item">
+                <span class="forecast-meta-label">Demand Direction</span>
+                <div style="margin-top: 2px;">
+                  <span class="trend-badge trend-up" id="forecastTrendBadge">↑ RISING</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Card -->
+          <div class="card" style="display: flex; flex-direction: column;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Historical Demand & Regression Projection</h3>
+                <p class="card-subtitle">Daily quantity (kg) trendline analyzed across historical market transactions</p>
+              </div>
+            </div>
+            <div class="card-body" style="flex: 1; min-height: 240px;">
+              <canvas id="demandChartCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           VIEW 3: SMART SUPPLY POOLING (MEMBER 4 CORE)
+           ===================================================================== -->
+      <section class="view-section" id="view-pooling" style="display: none;">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Smart Supply Pooling & Farmer Matcher 🤝</h1>
+            <p class="page-subtitle">When a single farmer cannot fulfill large bulk buyer orders, AI automatically aggregates supply across verified local farmers.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-gold" id="runMatchBtn">⚡ Run AI Pooling</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 360px 1fr; gap: 24px;">
+          <!-- Left: Simulation Controls -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Bulk Buyer Request Simulator</h3>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">Select Produce</label>
+                <select class="form-control" id="matchProductSelect" style="width: 100%;">
+                  <option value="Tomato" selected>🍅 Tomato</option>
+                  <option value="Onion">🧅 Onion</option>
+                  <option value="Potato">🥔 Potato</option>
+                  <option value="Brinjal">🍆 Brinjal</option>
+                  <option value="Cabbage">🥬 Cabbage</option>
+                  <option value="Carrot">🥕 Carrot</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Buyer Delivery Location</label>
+                <select class="form-control" id="matchLocationSelect" style="width: 100%;">
+                  <option value="Chennai" selected>Chennai Hub</option>
+                  <option value="Coimbatore">Coimbatore Hub</option>
+                  <option value="Madurai">Madurai Mandi</option>
+                  <option value="Trichy">Trichy Hub</option>
+                  <option value="Salem">Salem Mandi</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Required Bulk Quantity (kg)</label>
+                <input type="number" class="form-control" id="matchQuantityInput" value="1200" min="100" max="10000" step="50" style="width: 100%;" />
+                <span style="font-size: 11px; color: var(--text-muted);">Simulate orders larger than a single farmer's capacity</span>
+              </div>
+
+              <button class="btn btn-primary" onclick="document.getElementById('runMatchBtn').click()" style="width: 100%; margin-top: 8px;">
+                Calculate Smart Pooling
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Allocation Breakdown -->
+          <div class="card pooling-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">AI Pooled Allocation Breakdown</h3>
+                <p class="card-subtitle">Ranked by location proximity bonus, rating, and price competitiveness</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Summary Banner -->
+              <div id="matchingSummaryBanner" style="background-color: var(--primary-light); padding: 14px 18px; border-radius: var(--radius-md); margin-bottom: 20px; border: 1px solid rgba(31, 107, 69, 0.2);">
+                Loading matching results...
+              </div>
+
+              <!-- Progress Bar -->
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
+                  <strong style="color: var(--text-secondary);">Order Fulfillment Progress</strong>
+                  <span id="matchProgressLabel" style="font-weight: 600; color: var(--primary);">100% Fulfilled</span>
+                </div>
+                <div class="progress-bar-container" style="height: 12px;">
+                  <div class="progress-bar-fill" id="matchProgressBar" style="width: 100%;"></div>
+                </div>
+              </div>
+
+              <!-- Farmers List -->
+              <div id="matchedFarmersList">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           VIEW 4: MARKET INSIGHTS
+           ===================================================================== -->
+      <section class="view-section" id="view-market-insights" style="display: none;">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Market Insights & Top Crops 📊</h1>
+            <p class="page-subtitle">Analyze top trending produce ranked by projected 7-day demand across Tamil Nadu districts.</p>
+          </div>
+          <div class="page-actions">
+            <select class="form-control" id="marketLocationSelect">
+              <option value="Chennai" selected>Chennai Region</option>
+              <option value="Coimbatore">Coimbatore Region</option>
+              <option value="Madurai">Madurai Region</option>
+              <option value="Trichy">Trichy Region</option>
+              <option value="Salem">Salem Region</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <!-- Top Crops Ranked List -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 14px; color: var(--dark);">Top Ranked Crops in Region</h3>
+            <div id="topCropsList">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+
+          <!-- Comparative Bar Chart -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Comparative Regional Demand</h3>
+            </div>
+            <div class="card-body" style="height: 320px;">
+              <canvas id="marketChartCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           VIEW 5: RECOMMENDATIONS
+           ===================================================================== -->
+      <section class="view-section" id="view-recommendations" style="display: none;">
+        <div class="page-header">
+          <div class="page-title-group">
+            <h1 class="page-title">Crop & Supplier Recommendations 🌱</h1>
+            <p class="page-subtitle">Personalized AI advisory: what farmers should plant next, and top ranked suppliers for bulk buyers.</p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <!-- Farmer Crop Advisor -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">👨‍🌾 Farmer Advisory: What to Grow Next?</h3>
+                <p class="card-subtitle">Maximize farm income based on regional demand deficits</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Farm Location</label>
+                  <select class="form-control" id="recFarmerLocation" style="width: 100%;">
+                    <option value="Coimbatore" selected>Coimbatore</option>
+                    <option value="Madurai">Madurai</option>
+                    <option value="Salem">Salem</option>
+                    <option value="Trichy">Trichy</option>
+                    <option value="Chennai">Chennai</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Current Crop</label>
+                  <select class="form-control" id="recFarmerCurrentCrop" style="width: 100%;">
+                    <option value="Tomato" selected>Tomato</option>
+                    <option value="Onion">Onion</option>
+                    <option value="Potato">Potato</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-secondary" id="getFarmerRecBtn" style="width: 100%; margin-bottom: 16px;">
+                Get Crop Advisory
+              </button>
+              <div id="farmerRecResults"></div>
+            </div>
+          </div>
+
+          <!-- Buyer Supplier Matcher -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">🏢 Buyer Recommended Suppliers</h3>
+                <p class="card-subtitle">Ranked by verified rating, competitive price, and proximity</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Crop Needed</label>
+                  <select class="form-control" id="recBuyerProduct" style="width: 100%;">
+                    <option value="Tomato" selected>🍅 Tomato</option>
+                    <option value="Onion">🧅 Onion</option>
+                    <option value="Potato">🥔 Potato</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label">Buyer Hub</label>
+                  <select class="form-control" id="recBuyerLocation" style="width: 100%;">
+                    <option value="Chennai" selected>Chennai</option>
+                    <option value="Coimbatore">Coimbatore</option>
+                    <option value="Madurai">Madurai</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-secondary" id="getBuyerRecBtn" style="width: 100%; margin-bottom: 16px;">
+                Find Top Farmers
+              </button>
+              <div id="buyerRecResults"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Load UI Controller -->
+<script type="module" src="/static/js/annam-ui.js"></script>
+
+</body>
+</html>
