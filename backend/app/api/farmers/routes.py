@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.farmer import Farmer
 
-
 router = APIRouter()
 
 
@@ -17,14 +16,20 @@ def get_farmers(db: Session = Depends(get_db)):
 
 # ADD FARMER
 @router.post("/")
-def add_farmer(farmer: dict, db: Session = Depends(get_db)):
-
+def add_farmer(
+    full_name: str,
+    phone: str,
+    location: str = None,
+    farm_name: str = None,
+    farm_size: str = None,
+    db: Session = Depends(get_db)
+):
     new_farmer = Farmer(
-        full_name=farmer["full_name"],
-        phone=farmer["phone"],
-        location=farmer.get("location"),
-        farm_name=farmer.get("farm_name"),
-        farm_size=farmer.get("farm_size")
+        full_name=full_name,
+        phone=phone,
+        location=location,
+        farm_name=farm_name,
+        farm_size=farm_size
     )
 
     db.add(new_farmer)
