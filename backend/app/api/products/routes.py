@@ -1,37 +1,37 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.models.product import Product
 
 router = APIRouter()
 
 
-products = [
-    {
-        "id": 1,
-        "name": "Tomatoes",
-        "price": 40,
-        "quantity": 100,
-        "farmer": "Farmer Ravi"
-    },
-    {
-        "id": 2,
-        "name": "Potatoes",
-        "price": 30,
-        "quantity": 200,
-        "farmer": "Farmer Kumar"
-    }
-]
-
-
+# GET ALL PRODUCTS
 @router.get("/")
-def get_products():
+def get_products(db: Session = Depends(get_db)):
+    products = db.query(Product).all()
     return products
 
-@router.post("/")
-def add_product(product: dict):
-    new_product = {
-        "id": len(products) + 1,
-        **product
-    }
 
-    products.append(new_product)
+# ADD PRODUCT
+@router.post("/")
+def add_product(product: dict, db: Session = Depends(get_db)):
+
+    new_product = Product(
+        name=product["name"],
+        category=product["category"],
+        price=product["price"],
+        quantity=product["quantity"],
+        unit=product["unit"],
+        farmer_name=product["farmer_name"],
+        location=product.get("location"),
+        description=product.get("description"),
+        is_available=product.get("is_available", True)
+    )
+
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
 
     return new_product
