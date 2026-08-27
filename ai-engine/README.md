@@ -6,12 +6,17 @@ Standalone microservice providing demand forecasting, smart supply pooling / mat
 
 ## 🚀 Quick Start (One Command)
 
-### Option 1: Run Script
-Double-click or run from terminal:
+### Option 1: Git Bash (MINGW64)
+```bash
+./run.sh
+```
+
+### Option 2: PowerShell
 ```powershell
 .\run.ps1
 ```
-or in CMD:
+
+### Option 3: Command Prompt (cmd.exe)
 ```cmd
 run.bat
 ```
