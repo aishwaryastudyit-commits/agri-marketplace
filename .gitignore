@@ -1,2 +1,18 @@
 # Frontend dependencies
 frontend/node_modules/
+
+# Dependencies
+node_modules/
+
+# Build files
+dist/
+
+# Environment variables
+.env
+
+# Python virtual environment
+backend/.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
