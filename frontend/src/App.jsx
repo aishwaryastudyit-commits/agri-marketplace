@@ -11,16 +11,16 @@ import Marketplace from "./apps/consumer/pages/Marketplace";
 import ConsumerLogin from "./apps/consumer/pages/ConsumerLogin";
 import ConsumerProfile from "./apps/consumer/pages/ConsumerProfile";
 
+import BulkBuyerLogin from "./apps/bulk-buyer/pages/BulkBuyerLogin";
+import BulkBuyerMarketplace from "./apps/bulk-buyer/pages/BulkBuyerMarketplace";
+import BulkBuyerProfile from "./apps/bulk-buyer/pages/BulkBuyerProfile";
+
 import Orders from "./pages/ajay/Orders";
 import OrderDetails from "./pages/ajay/OrderDetails";
 import Payment from "./pages/ajay/Payment";
 import PaymentFailed from "./pages/ajay/PaymentFailed";
 import PaymentSuccess from "./pages/ajay/PaymentSuccess";
 
-
-/* TEMPORARY PAGES
-   Your teammates' code can replace these later.
-*/
 
 function TemporaryPage({ title, message }) {
   const navigate = useNavigate();
@@ -70,6 +70,11 @@ function TemporaryPage({ title, message }) {
 
 
 function App() {
+
+  /* =========================
+     CONSUMER STATE
+  ========================= */
+
   const [buyer, setBuyer] = useState(() => {
     const savedBuyer = localStorage.getItem("annam-buyer");
 
@@ -78,6 +83,24 @@ function App() {
       : null;
   });
 
+
+  /* =========================
+     BULK BUYER STATE
+  ========================= */
+
+  const [bulkBuyer, setBulkBuyer] = useState(() => {
+    const savedBulkBuyer =
+      localStorage.getItem("annam-bulk-buyer");
+
+    return savedBulkBuyer
+      ? JSON.parse(savedBulkBuyer)
+      : null;
+  });
+
+
+  /* =========================
+     CONSUMER LOGIN
+  ========================= */
 
   const handleLogin = (buyerData) => {
     localStorage.setItem(
@@ -89,6 +112,10 @@ function App() {
   };
 
 
+  /* =========================
+     CONSUMER PROFILE UPDATE
+  ========================= */
+
   const handleUpdateBuyer = (updatedBuyer) => {
     localStorage.setItem(
       "annam-buyer",
@@ -99,11 +126,42 @@ function App() {
   };
 
 
+  /* =========================
+     BULK BUYER LOGIN
+  ========================= */
+
+  const handleBulkBuyerLogin = (bulkBuyerData) => {
+    localStorage.setItem(
+      "annam-bulk-buyer",
+      JSON.stringify(bulkBuyerData)
+    );
+
+    setBulkBuyer(bulkBuyerData);
+  };
+
+
+  /* =========================
+     BULK BUYER PROFILE UPDATE
+  ========================= */
+
+  const handleUpdateBulkBuyer = (updatedBulkBuyer) => {
+    localStorage.setItem(
+      "annam-bulk-buyer",
+      JSON.stringify(updatedBulkBuyer)
+    );
+
+    setBulkBuyer(updatedBulkBuyer);
+  };
+
+
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* DEFAULT PAGE */}
+        {/* =========================
+            DEFAULT PAGE
+        ========================= */}
+
         <Route
           path="/"
           element={
@@ -122,7 +180,10 @@ function App() {
         />
 
 
-        {/* LOGIN */}
+        {/* =========================
+            CONSUMER LOGIN
+        ========================= */}
+
         <Route
           path="/login"
           element={
@@ -140,7 +201,10 @@ function App() {
         />
 
 
-        {/* MARKETPLACE */}
+        {/* =========================
+            CONSUMER MARKETPLACE
+        ========================= */}
+
         <Route
           path="/marketplace"
           element={
@@ -158,7 +222,10 @@ function App() {
         />
 
 
-        {/* PROFILE */}
+        {/* =========================
+            CONSUMER PROFILE
+        ========================= */}
+
         <Route
           path="/profile"
           element={
@@ -177,7 +244,74 @@ function App() {
         />
 
 
-        {/* ORDERS */}
+        {/* =========================
+            BULK BUYER LOGIN
+        ========================= */}
+
+        <Route
+          path="/bulk-login"
+          element={
+            bulkBuyer ? (
+              <Navigate
+                to="/bulk-marketplace"
+                replace
+              />
+            ) : (
+              <BulkBuyerLogin
+                onLogin={handleBulkBuyerLogin}
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            BULK BUYER MARKETPLACE
+        ========================= */}
+
+        <Route
+          path="/bulk-marketplace"
+          element={
+            bulkBuyer ? (
+              <BulkBuyerMarketplace
+                bulkBuyer={bulkBuyer}
+              />
+            ) : (
+              <Navigate
+                to="/bulk-login"
+                replace
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            BULK BUYER PROFILE
+        ========================= */}
+
+        <Route
+          path="/bulk-profile"
+          element={
+            bulkBuyer ? (
+              <BulkBuyerProfile
+                bulkBuyer={bulkBuyer}
+                onUpdateBulkBuyer={handleUpdateBulkBuyer}
+              />
+            ) : (
+              <Navigate
+                to="/bulk-login"
+                replace
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            ORDERS
+        ========================= */}
+
         <Route
           path="/orders"
           element={
@@ -207,7 +341,10 @@ function App() {
         />
 
 
-        {/* TEMPORARY TRACK DELIVERY PAGE */}
+        {/* =========================
+            TRACK DELIVERY
+        ========================= */}
+
         <Route
           path="/track-delivery"
           element={
@@ -226,7 +363,10 @@ function App() {
         />
 
 
-        {/* TEMPORARY CART PAGE */}
+        {/* =========================
+            CART
+        ========================= */}
+
         <Route
           path="/cart"
           element={
@@ -245,7 +385,10 @@ function App() {
         />
 
 
-        {/* TEMPORARY NOTIFICATIONS PAGE */}
+        {/* =========================
+            NOTIFICATIONS
+        ========================= */}
+
         <Route
           path="/notifications"
           element={
@@ -264,7 +407,10 @@ function App() {
         />
 
 
-        {/* PAYMENTS */}
+        {/* =========================
+            PAYMENTS
+        ========================= */}
+
         <Route
           path="/payment/success"
           element={
@@ -308,7 +454,10 @@ function App() {
         />
 
 
-        {/* UNKNOWN ROUTES */}
+        {/* =========================
+            UNKNOWN ROUTES
+        ========================= */}
+
         <Route
           path="*"
           element={
