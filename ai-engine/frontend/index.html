@@ -38,24 +38,24 @@
     <nav class="sidebar-nav">
       <div class="nav-section-title">AI & Intelligence (Member 4)</div>
       <a href="#forecast" class="nav-item active" data-view="view-forecast">
-        <span>Demand Forecast</span>
+        <span data-i18n-key="navForecast">Demand Forecast</span>
       </a>
       <a href="#pooling" class="nav-item" data-view="view-pooling">
-        <span>Smart Supply Pooling</span>
-        <span class="nav-badge">Core</span>
+        <span data-i18n-key="navPooling">Smart Supply Pooling</span>
+        <span class="nav-badge" data-i18n-key="navCore">Core</span>
       </a>
       <a href="#market-insights" class="nav-item" data-view="view-market-insights">
-        <span>Market Insights</span>
+        <span data-i18n-key="navMarket">Market Insights</span>
       </a>
       <a href="#recommendations" class="nav-item" data-view="view-recommendations">
-        <span>Recommendations</span>
+        <span data-i18n-key="navRecommendations">Recommendations</span>
       </a>
 
       <div class="sidebar-divider"></div>
 
-      <div class="nav-section-title">System</div>
+      <div class="nav-section-title" data-i18n-key="systemSection">System</div>
       <a href="/docs" target="_blank" class="nav-item">
-        <span>Swagger API Docs</span>
+        <span data-i18n-key="navDocs">Swagger API Docs</span>
       </a>
     </nav>
 
@@ -77,25 +77,58 @@
       <div class="top-nav-left">
         <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">☰</button>
         <div class="search-bar">
-          <span class="search-icon">🔍</span>
-          <input type="text" class="search-input" placeholder="Search crops, farmers, mandis, or orders..." />
+          <button class="search-trigger" id="searchTrigger" type="button" aria-label="Search">🔍</button>
+          <input type="text" class="search-input" id="globalSearchInput" placeholder="Search crops, farmers, mandis, or orders..." data-i18n-placeholder="searchPlaceholder" />
         </div>
       </div>
 
       <div class="top-nav-right">
         <!-- Live Status -->
         <span class="badge badge-available" id="aiEngineStatusPill" style="padding: 6px 12px;">
-          <span class="badge-dot"></span> AI Engine Live (:8001)
+          <span class="badge-dot"></span> <span data-i18n-key="statusLive">AI Engine Live</span> (:8001)
         </span>
 
         <div class="nav-actions-group">
           <div class="action-btn-wrapper">
-            <button class="top-action-btn" title="Notifications">
+            <button class="top-action-btn" id="notificationBtn" title="Notifications" aria-label="Notifications">
               🔔
               <span class="notification-dot"></span>
             </button>
+            <div class="top-action-menu" id="notificationMenu" role="menu" aria-label="Notifications menu">
+              <div class="menu-header" data-i18n-key="notifications">Notifications</div>
+              <button class="menu-item" type="button" data-i18n-key="notif1">Forecast updated for Chennai</button>
+              <button class="menu-item" type="button" data-i18n-key="notif2">3 farmer matches need review</button>
+              <button class="menu-item" type="button" data-i18n-key="notif3">Market price alert: Tomato +4.2%</button>
+            </div>
           </div>
-          <button class="top-action-btn" title="Messages">💬</button>
+
+          <div class="action-btn-wrapper">
+            <button class="top-action-btn" id="messageBtn" title="Messages" aria-label="Messages">💬</button>
+            <div class="top-action-menu" id="messageMenu" role="menu" aria-label="Messages menu">
+              <div class="menu-header" data-i18n-key="messages">Messages</div>
+              <button class="menu-item" type="button" data-i18n-key="msg1">Aishwarya: Forecast summary ready</button>
+              <button class="menu-item" type="button" data-i18n-key="msg2">Karthik: Bulk order confirmation</button>
+              <button class="menu-item" type="button" data-i18n-key="msg3">Ravi: Crop advisory shared</button>
+            </div>
+          </div>
+
+          <div class="action-btn-wrapper">
+            <button class="top-action-btn language-trigger" id="languageBtn" type="button" title="Language selector" aria-label="Language selector">EN</button>
+            <div class="top-action-menu language-menu" id="languageMenu" role="menu" aria-label="Language menu">
+              <div class="menu-header" data-i18n-key="language">Language</div>
+              <button class="menu-item lang-option" type="button" data-lang="English">English</button>
+              <button class="menu-item lang-option" type="button" data-lang="Hindi">Hindi</button>
+              <button class="menu-item lang-option" type="button" data-lang="Tamil">Tamil</button>
+              <button class="menu-item lang-option" type="button" data-lang="Telugu">Telugu</button>
+              <button class="menu-item lang-option" type="button" data-lang="Bengali">Bengali</button>
+              <button class="menu-item lang-option" type="button" data-lang="Kannada">Kannada</button>
+              <button class="menu-item lang-option" type="button" data-lang="Malayalam">Malayalam</button>
+              <button class="menu-item lang-option" type="button" data-lang="Marathi">Marathi</button>
+              <button class="menu-item lang-option" type="button" data-lang="Gujarati">Gujarati</button>
+              <button class="menu-item lang-option" type="button" data-lang="Punjabi">Punjabi</button>
+              <button class="menu-item lang-option" type="button" data-lang="Odia">Odia</button>
+            </div>
+          </div>
         </div>
 
         <!-- User Profile Dropdown -->
@@ -145,11 +178,11 @@
       <section class="view-section" id="view-forecast">
         <div class="page-header">
           <div class="page-title-group">
-            <h1 class="page-title">Demand Forecasting & Trends 📈</h1>
-            <p class="page-subtitle">AI predicts expected regional demand (kg) over the next 7–30 days to optimize farmer harvest timing.</p>
+            <h1 class="page-title" data-i18n-key="pageTitleForecast">Demand Forecasting & Trends 📈</h1>
+            <p class="page-subtitle" data-i18n-key="pageSubtitleForecast">AI predicts expected regional demand (kg) over the next 7–30 days to optimize farmer harvest timing.</p>
           </div>
           <div class="page-actions">
-            <button class="btn btn-primary" id="runForecastBtn">Refresh Forecast</button>
+            <button class="btn btn-primary" id="runForecastBtn" data-i18n-key="refreshForecast">Refresh Forecast</button>
           </div>
         </div>
 
@@ -157,7 +190,7 @@
         <div class="filter-bar">
           <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
             <div class="form-group">
-              <label class="form-label">Produce</label>
+              <label class="form-label" data-i18n-key="produceLabel">Produce</label>
               <select class="form-control" id="forecastProductSelect">
                 <option value="Tomato" selected>🍅 Tomato</option>
                 <option value="Onion">🧅 Onion</option>
@@ -170,7 +203,7 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Location / Mandi</label>
+              <label class="form-label" data-i18n-key="locationLabel">Location / Mandi</label>
               <select class="form-control" id="forecastLocationSelect">
                 <option value="Chennai" selected>Chennai</option>
                 <option value="Coimbatore">Coimbatore</option>
@@ -181,11 +214,11 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Horizon</label>
+              <label class="form-label" data-i18n-key="horizonLabel">Horizon</label>
               <select class="form-control" id="forecastHorizonSelect">
-                <option value="7" selected>Next 7 Days</option>
-                <option value="14">Next 14 Days</option>
-                <option value="30">Next 30 Days</option>
+                <option value="7" selected data-i18n-option="horizon7">Next 7 Days</option>
+                <option value="14" data-i18n-option="horizon14">Next 14 Days</option>
+                <option value="30" data-i18n-option="horizon30">Next 30 Days</option>
               </select>
             </div>
           </div>
