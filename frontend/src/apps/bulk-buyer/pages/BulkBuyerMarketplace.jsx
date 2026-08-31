@@ -16,6 +16,15 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
   const [unit, setUnit] = useState("kg");
   const [deliveryLocation, setDeliveryLocation] = useState("");
 
+  /* =========================
+     TEMPORARY REQUIREMENT FLOW
+  ========================= */
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [requirementConfirmed, setRequirementConfirmed] =
+    useState(false);
+
+
   const products = [
     {
       id: 1,
@@ -94,6 +103,11 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
     return matchesCategory && matchesSearch;
   });
 
+
+  /* =========================
+     FIND SUPPLIERS
+  ========================= */
+
   const handleFindSuppliers = (event) => {
     event.preventDefault();
 
@@ -112,10 +126,47 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
       return;
     }
 
-    alert(
-      `Looking for farmers supplying ${quantity} ${unit} of ${product}`
-    );
+    const requiredQuantity = Number(quantity);
+
+    const productSearch = product.trim().toLowerCase();
+
+    const matchingProduct = products.find((item) => {
+      return (
+        item.name.toLowerCase().includes(productSearch) ||
+        item.category.toLowerCase().includes(productSearch)
+      );
+    });
+
+    if (!matchingProduct) {
+      alert(
+        `No ${product} is currently available from our temporary farmer listings.`
+      );
+
+      setSelectedProduct(null);
+      setRequirementConfirmed(false);
+
+      return;
+    }
+
+    if (requiredQuantity > matchingProduct.quantity) {
+      alert(
+        `Only ${matchingProduct.quantity} ${matchingProduct.unit} is currently available.`
+      );
+
+      setSelectedProduct(null);
+      setRequirementConfirmed(false);
+
+      return;
+    }
+
+    setSelectedProduct(matchingProduct);
+    setRequirementConfirmed(false);
   };
+
+
+  /* =========================
+     PROFILE INITIAL
+  ========================= */
 
   const getInitial = () => {
     const name =
@@ -130,6 +181,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
     bulkBuyer?.full_name ||
     bulkBuyer?.business_name ||
     t("bulkBuyer");
+
 
   return (
     <div className="bulk-app">
@@ -178,7 +230,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
             </span>
 
             <span>
-              {t("marketplace")}
+              {t("Market place")}
             </span>
           </button>
 
@@ -195,7 +247,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
             </span>
 
             <span>
-              {t("myRequirements")}
+              {t("My Requirements")}
             </span>
           </button>
 
@@ -212,7 +264,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
             </span>
 
             <span>
-              {t("bulkOrders")}
+              {t("Bulk Orders")}
             </span>
           </button>
 
@@ -232,6 +284,22 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
               {t("trackDelivery")}
             </span>
           </button>
+
+          <button
+  type="button"
+  className="bulk-sidebar-link"
+  onClick={() =>
+    navigate("/bulk-payment-history")
+  }
+>
+  <span className="bulk-nav-icon">
+    ₹
+  </span>
+
+  <span>
+    Payment History
+  </span>
+</button>
 
         </div>
 
@@ -475,6 +543,320 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
           </section>
 
 
+          {/* ================= TEMPORARY SEARCH RESULT ================= */}
+
+          {selectedProduct && !requirementConfirmed && (
+
+            <section className="bulk-search-result-section">
+
+              <p className="bulk-section-kicker">
+                SUPPLIER FOUND
+              </p>
+
+              <h2>
+                Available Product
+              </h2>
+
+
+              <div className="bulk-result-card">
+
+                <div className="bulk-result-header">
+
+                  <div>
+
+                    <p className="bulk-product-category">
+                      {selectedProduct.category}
+                    </p>
+
+                    <h3>
+                      {selectedProduct.name}
+                    </h3>
+
+                  </div>
+
+
+                  <div className="bulk-result-price">
+
+                    ₹{selectedProduct.price}
+
+                    <small>
+                      / {selectedProduct.unit}
+                    </small>
+
+                  </div>
+
+                </div>
+
+
+                <p className="bulk-product-description">
+                  {selectedProduct.description}
+                </p>
+
+
+                <div className="bulk-card-line"></div>
+
+
+                <div className="bulk-result-details">
+
+                  <div>
+
+                    <span>
+                      FARMER
+                    </span>
+
+                    <strong>
+                      👨‍🌾 {selectedProduct.farmer_name}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      FARM LOCATION
+                    </span>
+
+                    <strong>
+                      📍 {selectedProduct.location}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      AVAILABLE
+                    </span>
+
+                    <strong>
+                      {selectedProduct.quantity}{" "}
+                      {selectedProduct.unit}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      YOUR REQUIREMENT
+                    </span>
+
+                    <strong>
+                      {quantity} {unit}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      DELIVERY LOCATION
+                    </span>
+
+                    <strong>
+                      📍 {deliveryLocation}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div className="bulk-result-total">
+
+                  <div>
+
+                    <span>
+                      Estimated Total
+                    </span>
+
+                    <strong>
+                      ₹
+                      {(
+                        Number(quantity) *
+                        Number(selectedProduct.price)
+                      ).toLocaleString("en-IN")}
+                    </strong>
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    className="bulk-find-button"
+                    onClick={() =>
+                      setRequirementConfirmed(true)
+                    }
+                  >
+                    Confirm Requirement →
+                  </button>
+
+                </div>
+
+              </div>
+
+            </section>
+
+          )}
+
+
+          {/* ================= CONFIRMED REQUIREMENT ================= */}
+
+          {selectedProduct && requirementConfirmed && (
+
+            <section className="bulk-confirmed-section">
+
+              <p className="bulk-section-kicker">
+                REQUIREMENT CONFIRMED
+              </p>
+
+              <h2>
+                Review Your Order
+              </h2>
+
+
+              <div className="bulk-confirmed-card">
+
+                <div className="bulk-confirmed-success">
+                  ✓
+                </div>
+
+
+                <h3>
+                  {selectedProduct.name}
+                </h3>
+
+
+                <p>
+                  Your requirement has been confirmed.
+                </p>
+
+
+                <div className="bulk-order-summary">
+
+                  <div>
+
+                    <span>
+                      Farmer
+                    </span>
+
+                    <strong>
+                      {selectedProduct.farmer_name}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Product
+                    </span>
+
+                    <strong>
+                      {selectedProduct.name}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Quantity
+                    </span>
+
+                    <strong>
+                      {quantity} {unit}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Price
+                    </span>
+
+                    <strong>
+                      ₹{selectedProduct.price} /{" "}
+                      {selectedProduct.unit}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Delivery Location
+                    </span>
+
+                    <strong>
+                      {deliveryLocation}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      Total Amount
+                    </span>
+
+                    <strong>
+                      ₹
+                      {(
+                        Number(quantity) *
+                        Number(selectedProduct.price)
+                      ).toLocaleString("en-IN")}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div className="bulk-payment-actions">
+
+                  <button
+                    type="button"
+                    className="bulk-secondary-button"
+                    onClick={() => {
+                      setRequirementConfirmed(false);
+                    }}
+                  >
+                    ← Change Requirement
+                  </button>
+
+
+                  <button
+                    type="button"
+                    className="bulk-payment-button"
+                    onClick={() =>
+                      alert(
+                        "Payment gateway will open here."
+                      )
+                    }
+                  >
+                    💳 Make Payment
+                  </button>
+
+                </div>
+
+              </div>
+
+            </section>
+
+          )}
+
+
           {/* ================= CATEGORIES ================= */}
 
           <section className="bulk-category-section">
@@ -544,9 +926,11 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
               <span className="bulk-product-count">
 
                 {filteredProducts.length}{" "}
+
                 {filteredProducts.length === 1
                   ? t("product")
                   : t("products")}{" "}
+
                 {t("found")}
 
               </span>
@@ -573,9 +957,11 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
 
                       <span className="bulk-product-price">
                         ₹{item.price}
+
                         <small>
                           / {item.unit}
                         </small>
+
                       </span>
 
                     </div>
@@ -598,20 +984,26 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
 
                       <p>
                         👨‍🌾
+
                         <strong>
                           {t("farmer")}:
                         </strong>
+
                         {" "}
+
                         {item.farmer_name}
                       </p>
 
 
                       <p>
                         📍
+
                         <strong>
                           {t("location")}:
                         </strong>
+
                         {" "}
+
                         {item.location}
                       </p>
 

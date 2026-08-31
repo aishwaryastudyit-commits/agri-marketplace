@@ -11,6 +11,7 @@ import Marketplace from "./apps/consumer/pages/Marketplace";
 import ConsumerLogin from "./apps/consumer/pages/ConsumerLogin";
 import ConsumerProfile from "./apps/consumer/pages/ConsumerProfile";
 
+import BulkPaymentHistory from "./apps/bulk-buyer/pages/BulkPaymentHistory";
 import BulkBuyerLogin from "./apps/bulk-buyer/pages/BulkBuyerLogin";
 import BulkBuyerMarketplace from "./apps/bulk-buyer/pages/BulkBuyerMarketplace";
 import BulkBuyerProfile from "./apps/bulk-buyer/pages/BulkBuyerProfile";
@@ -297,6 +298,27 @@ function App() {
               <BulkBuyerProfile
                 bulkBuyer={bulkBuyer}
                 onUpdateBulkBuyer={handleUpdateBulkBuyer}
+              />
+            ) : (
+              <Navigate
+                to="/bulk-login"
+                replace
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            BULK PAYMENT HISTORY
+        ========================= */}
+
+        <Route
+          path="/bulk-payment-history"
+          element={
+            bulkBuyer ? (
+              <BulkPaymentHistory
+                bulkBuyer={bulkBuyer}
               />
             ) : (
               <Navigate
