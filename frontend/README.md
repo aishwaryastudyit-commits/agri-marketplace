@@ -1,23 +1,16 @@
-## ANNAM frontend
+# React + Vite
 
-This Vite + React app contains the orders and payments module. It runs in mock mode by default, so the UI is usable before the FastAPI service or database is configured.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-### Node.js setup
+Currently, two official plugins are available:
 
-Install Node.js 20 or newer, then from this folder run:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-```powershell
-npm install
-npm run dev
-```
+## React Compiler
 
-Open `http://localhost:5173/orders`. Validate a production bundle with `npm run build`.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-To use the Python API instead of browser mock data, copy `.env.example` to `.env`, set `VITE_USE_MOCKS=false`, and set `VITE_API_URL` to the API origin.
+## Expanding the ESLint configuration
 
-### Routes
-
-- `/orders` lists orders and supports cancellation.
-- `/orders/ORD1001` shows order details.
-- `/payment/ORD1002` opens checkout.
-- `/payment/success` and `/payment/failed` show payment outcomes.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
