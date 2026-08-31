@@ -153,8 +153,20 @@ function Marketplace({ buyer }) {
   const [error, setError] =
     useState("");
 
+  /* CART COUNT */
   const [cartCount, setCartCount] =
-    useState(0);
+    useState(() => {
+      const savedCart =
+        JSON.parse(
+          localStorage.getItem("annam.cart")
+        ) || [];
+
+      return savedCart.reduce(
+        (total, item) =>
+          total + (item.cartQuantity || 1),
+        0
+      );
+    });
 
   /* VIEW ALL STATE */
   const [showAllCategories, setShowAllCategories] =
@@ -194,11 +206,54 @@ function Marketplace({ buyer }) {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = () => {
-    setCartCount(
-      (previousCount) =>
-        previousCount + 1
+  /* ADD PRODUCT TO CART */
+  const handleAddToCart = (product) => {
+    const savedCart =
+      JSON.parse(
+        localStorage.getItem("annam.cart")
+      ) || [];
+
+    const existingProduct =
+      savedCart.find(
+        (item) => item.id === product.id
+      );
+
+    let updatedCart;
+
+    if (existingProduct) {
+      updatedCart = savedCart.map(
+        (item) =>
+          item.id === product.id
+            ? {
+                ...item,
+                cartQuantity:
+                  (item.cartQuantity || 1) + 1,
+              }
+            : item
+      );
+    } else {
+      updatedCart = [
+        ...savedCart,
+        {
+          ...product,
+          cartQuantity: 1,
+        },
+      ];
+    }
+
+    localStorage.setItem(
+      "annam.cart",
+      JSON.stringify(updatedCart)
     );
+
+    const totalItems =
+      updatedCart.reduce(
+        (total, item) =>
+          total + (item.cartQuantity || 1),
+        0
+      );
+
+    setCartCount(totalItems);
   };
 
   const filteredProducts =
@@ -733,8 +788,8 @@ function Marketplace({ buyer }) {
                         <button
                           type="button"
                           className="add-cart-button"
-                          onClick={
-                            handleAddToCart
+                          onClick={() =>
+                            handleAddToCart(product)
                           }
                           disabled={
                             !product.is_available

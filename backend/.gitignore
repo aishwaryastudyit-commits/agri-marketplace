@@ -1,6 +1,17 @@
-# Environment variables
-.env
+# Node modules
+node_modules/
 
-# Python cache
+# Vite cache
+node_modules/.vite/
+
+# Python
 __pycache__/
 *.pyc
+
+# Environment
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
