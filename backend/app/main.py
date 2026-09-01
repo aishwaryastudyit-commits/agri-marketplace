@@ -1,12 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# API Routes
 from app.api.farmers.routes import router as farmers_router
 from app.api.products.routes import router as products_router
 from app.api.orders.routes import router as orders_router
 from app.api.payments.routes import router as payments_router
 from app.api.logistics.routes import router as logistics_router
 from app.api.buyers.routes import router as buyers_router
+from app.api.auth.routes import router as auth_router
+from app.api.bulk_orders.routes import router as bulk_orders_router
+from app.api.notifications.routes import router as notifications_router
+from app.api.forecasts.routes import router as forecasts_router
 
 
 # Database imports
@@ -22,15 +27,23 @@ from app.models.order import Order
 from app.models.payment import Payment
 from app.models.delivery import Delivery
 from app.models.buyer import Buyer
+from app.models.notification import Notification
+from app.models.forecast import Forecast
 
 
-# Create FastAPI application
+# --------------------------------------------------
+# CREATE FASTAPI APPLICATION
+# --------------------------------------------------
+
 app = FastAPI(
     title="ANNAM API"
 )
 
 
-# Allow React frontend to connect to FastAPI backend
+# --------------------------------------------------
+# CORS
+# --------------------------------------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -43,14 +56,20 @@ app.add_middleware(
 )
 
 
-# Create database tables on startup
+# --------------------------------------------------
+# DATABASE STARTUP
+# --------------------------------------------------
+
 @app.on_event("startup")
 def create_database_tables():
     Base.metadata.create_all(bind=engine)
     print("✅ ANNAM database tables created successfully!")
 
 
-# Home route
+# --------------------------------------------------
+# HOME ROUTE
+# --------------------------------------------------
+
 @app.get("/")
 def home():
     return {
@@ -58,7 +77,10 @@ def home():
     }
 
 
-# Products API
+# --------------------------------------------------
+# PRODUCTS API
+# --------------------------------------------------
+
 app.include_router(
     products_router,
     prefix="/products",
@@ -66,7 +88,10 @@ app.include_router(
 )
 
 
-# Farmers API
+# --------------------------------------------------
+# FARMERS API
+# --------------------------------------------------
+
 app.include_router(
     farmers_router,
     prefix="/farmers",
@@ -74,7 +99,10 @@ app.include_router(
 )
 
 
-# Orders API
+# --------------------------------------------------
+# ORDERS API
+# --------------------------------------------------
+
 app.include_router(
     orders_router,
     prefix="/orders",
@@ -82,7 +110,10 @@ app.include_router(
 )
 
 
-# Payments API
+# --------------------------------------------------
+# PAYMENTS API
+# --------------------------------------------------
+
 app.include_router(
     payments_router,
     prefix="/payments",
@@ -90,7 +121,10 @@ app.include_router(
 )
 
 
-# Logistics API
+# --------------------------------------------------
+# LOGISTICS API
+# --------------------------------------------------
+
 app.include_router(
     logistics_router,
     prefix="/logistics",
@@ -98,9 +132,56 @@ app.include_router(
 )
 
 
-# Buyers API
+# --------------------------------------------------
+# BUYERS API
+# --------------------------------------------------
+
 app.include_router(
     buyers_router,
     prefix="/buyers",
     tags=["Buyers"]
+)
+
+
+# --------------------------------------------------
+# AUTHENTICATION API
+# --------------------------------------------------
+
+app.include_router(
+    auth_router,
+    prefix="/auth",
+    tags=["Authentication"]
+)
+
+
+# --------------------------------------------------
+# BULK ORDERS API
+# --------------------------------------------------
+
+app.include_router(
+    bulk_orders_router,
+    prefix="/bulk-orders",
+    tags=["Bulk Orders"]
+)
+
+
+# --------------------------------------------------
+# NOTIFICATIONS API
+# --------------------------------------------------
+
+app.include_router(
+    notifications_router,
+    prefix="/notifications",
+    tags=["Notifications"]
+)
+
+
+# --------------------------------------------------
+# FORECASTS API
+# --------------------------------------------------
+
+app.include_router(
+    forecasts_router,
+    prefix="/forecasts",
+    tags=["Forecasts"]
 )

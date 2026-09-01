@@ -2,21 +2,27 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.delivery import Delivery
-from app.models.order import Order
+from app.services import logistics_service
 
 
 router = APIRouter()
 
 
+# =========================================================
 # GET ALL DELIVERIES
+# =========================================================
+
 @router.get("/")
-def get_deliveries(db: Session = Depends(get_db)):
-    deliveries = db.query(Delivery).all()
-    return deliveries
+def get_deliveries(
+    db: Session = Depends(get_db)
+):
+    return logistics_service.get_all_deliveries(db)
 
 
+# =========================================================
 # CREATE DELIVERY
+# =========================================================
+
 @router.post("/")
 def create_delivery(
     order_id: int,
@@ -25,82 +31,80 @@ def create_delivery(
     tracking_number: str = None,
     db: Session = Depends(get_db)
 ):
-    # Find the order
-    order = db.query(Order).filter(
-        Order.id == order_id
-    ).first()
 
-    # Check whether order exists
-    if not order:
-        raise HTTPException(
-            status_code=404,
-            detail="Order not found"
+    try:
+
+        return logistics_service.create_delivery(
+            db=db,
+            order_id=order_id,
+            delivery_address=delivery_address,
+            assigned_driver=assigned_driver,
+            tracking_number=tracking_number
         )
 
-    # Only confirmed orders can be delivered
-    if order.status != "confirmed":
+    except ValueError as error:
+
+        message = str(error)
+
+        if message == "Order not found":
+            raise HTTPException(
+                status_code=404,
+                detail=message
+            )
+
         raise HTTPException(
             status_code=400,
-            detail="Order is not confirmed yet"
+            detail=message
         )
 
-    # Create delivery
-    new_delivery = Delivery(
-        order_id=order_id,
-        delivery_address=delivery_address,
-        delivery_status="pending",
-        assigned_driver=assigned_driver,
-        tracking_number=tracking_number
-    )
 
-    db.add(new_delivery)
-    db.commit()
-    db.refresh(new_delivery)
-
-    return new_delivery
-
-
+# =========================================================
 # UPDATE DELIVERY STATUS
+# =========================================================
+
 @router.put("/{delivery_id}/status")
 def update_delivery_status(
     delivery_id: int,
     delivery_status: str,
     db: Session = Depends(get_db)
 ):
-    # Find delivery
-    delivery = db.query(Delivery).filter(
-        Delivery.id == delivery_id
-    ).first()
 
-    # Check whether delivery exists
-    if not delivery:
-        raise HTTPException(
-            status_code=404,
-            detail="Delivery not found"
+    try:
+
+        return logistics_service.update_delivery_status(
+            db=db,
+            delivery_id=delivery_id,
+            delivery_status=delivery_status
         )
 
-    # Update delivery status
-    delivery.delivery_status = delivery_status
+    except ValueError as error:
 
-    db.commit()
-    db.refresh(delivery)
+        raise HTTPException(
+            status_code=404,
+            detail=str(error)
+        )
 
-    return delivery
 
-# TRACK LOGISTICS BY TRACKING NUMBER
+# =========================================================
+# TRACK DELIVERY
+# =========================================================
+
 @router.get("/track/{tracking_number}")
 def track_logistics(
     tracking_number: str,
     db: Session = Depends(get_db)
 ):
-    logistics = db.query(Delivery).filter(
-        Delivery.tracking_number == tracking_number
-    ).first()
 
-    if not logistics:
-        raise HTTPException(
-            status_code=404,
-            detail="Tracking number not found"
+    try:
+
+        return logistics_service.track_delivery(
+            db=db,
+            tracking_number=tracking_number
         )
 
-    return logistics
+    except ValueError as error:
+
+        raise HTTPException(
+            status_code=404,
+            detail=str(error)
+        )

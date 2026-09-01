@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.buyer import Buyer
 from app.models.order import Order
+from app.services import matching_service
 
 
 router = APIRouter(
@@ -11,7 +12,10 @@ router = APIRouter(
 )
 
 
+# =========================================================
 # CREATE BUYER
+# =========================================================
+
 @router.post("/")
 def create_buyer(
     full_name: str,
@@ -34,21 +38,49 @@ def create_buyer(
     return buyer
 
 
+# =========================================================
 # GET ALL BUYERS
+# =========================================================
+
 @router.get("/")
-def get_buyers(db: Session = Depends(get_db)):
+def get_buyers(
+    db: Session = Depends(get_db)
+):
     buyers = db.query(Buyer).all()
+
     return buyers
 
 
+# =========================================================
 # GET ORDERS FOR A SPECIFIC BUYER
+# =========================================================
+
 @router.get("/buyer/{buyer_id}")
 def get_buyer_orders(
     buyer_id: int,
     db: Session = Depends(get_db)
 ):
-    orders = db.query(Order).filter(
-        Order.buyer_id == buyer_id
-    ).all()
+    orders = (
+        db.query(Order)
+        .filter(Order.buyer_id == buyer_id)
+        .all()
+    )
 
     return orders
+
+
+# =========================================================
+# MATCH PRODUCTS FOR BUYER
+# =========================================================
+
+@router.get("/match-products")
+def match_products(
+    category: str = None,
+    location: str = None,
+    db: Session = Depends(get_db)
+):
+    return matching_service.find_matching_products(
+        db=db,
+        category=category,
+        location=location
+    )
