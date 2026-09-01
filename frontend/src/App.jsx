@@ -1,266 +1,569 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+cat > frontend/src/App.jsx <<'EOF'
+import { useState } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 
 import Marketplace from "./apps/consumer/pages/Marketplace";
 import Cart from "./apps/consumer/pages/Cart";
+import ConsumerLogin from "./apps/consumer/pages/ConsumerLogin";
 import ConsumerProfile from "./apps/consumer/pages/ConsumerProfile";
-import Orders from "./pages/ajay/Orders";
 
-// Bulk Buyer
 import BulkBuyerLogin from "./apps/bulk-buyer/pages/BulkBuyerLogin";
 import BulkBuyerMarketplace from "./apps/bulk-buyer/pages/BulkBuyerMarketplace";
+import BulkBuyerProfile from "./apps/bulk-buyer/pages/BulkBuyerProfile";
+import BulkPaymentHistory from "./apps/bulk-buyer/pages/BulkPaymentHistory";
 
-// Logistics
 import LogisticsApp from "./apps/logistics/App";
 
-// Language
+import Orders from "./pages/ajay/Orders";
+import OrderDetails from "./pages/ajay/OrderDetails";
+import Payment from "./pages/ajay/Payment";
+import PaymentFailed from "./pages/ajay/PaymentFailed";
+import PaymentSuccess from "./pages/ajay/PaymentSuccess";
+
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 
 
+function TemporaryPage({ title, message }) {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "40px",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => navigate("/marketplace")}
+        style={{
+          marginBottom: "30px",
+          padding: "10px 18px",
+          cursor: "pointer",
+        }}
+      >
+        ← Back to Marketplace
+      </button>
+
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          padding: "40px",
+          borderRadius: "15px",
+          border: "1px solid #ddd",
+        }}
+      >
+        <h1>{title}</h1>
+
+        <p
+          style={{
+            marginTop: "15px",
+            fontSize: "16px",
+          }}
+        >
+          {message}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 function App() {
+  /* =========================
+     CONSUMER STATE
+  ========================= */
 
-  /*
-   * -----------------------------------------
-   * CONSUMER LOGIN / USER DATA
-   * -----------------------------------------
-   */
+  const [buyer, setBuyer] = useState(() => {
+    const savedBuyer = localStorage.getItem("annam-buyer");
 
-  const savedBuyer = localStorage.getItem("annam-buyer");
-
-  const buyer = savedBuyer
-    ? JSON.parse(savedBuyer)
-    : null;
+    return savedBuyer
+      ? JSON.parse(savedBuyer)
+      : null;
+  });
 
 
-  /*
-   * -----------------------------------------
-   * CONSUMER LOGIN
-   * -----------------------------------------
-   */
+  /* =========================
+     BULK BUYER STATE
+  ========================= */
 
-  const handleConsumerLogin = (buyerData) => {
+  const [bulkBuyer, setBulkBuyer] = useState(() => {
+    const savedBulkBuyer =
+      localStorage.getItem("annam-bulk-buyer");
 
+    return savedBulkBuyer
+      ? JSON.parse(savedBulkBuyer)
+      : null;
+  });
+
+
+  /* =========================
+     CONSUMER LOGIN
+  ========================= */
+
+  const handleLogin = (buyerData) => {
     localStorage.setItem(
       "annam-buyer",
       JSON.stringify(buyerData)
     );
 
-    window.location.href = "/marketplace";
+    setBuyer(buyerData);
   };
 
 
-  /*
-   * -----------------------------------------
-   * BULK BUYER LOGIN
-   * -----------------------------------------
-   */
+  /* =========================
+     CONSUMER PROFILE UPDATE
+  ========================= */
+
+  const handleUpdateBuyer = (updatedBuyer) => {
+    localStorage.setItem(
+      "annam-buyer",
+      JSON.stringify(updatedBuyer)
+    );
+
+    setBuyer(updatedBuyer);
+  };
+
+
+  /* =========================
+     BULK BUYER LOGIN
+  ========================= */
 
   const handleBulkBuyerLogin = (bulkBuyerData) => {
-
     localStorage.setItem(
       "annam-bulk-buyer",
       JSON.stringify(bulkBuyerData)
     );
 
-    window.location.href = "/bulk-marketplace";
+    setBulkBuyer(bulkBuyerData);
   };
 
 
-  /*
-   * -----------------------------------------
-   * UPDATE CONSUMER PROFILE
-   * -----------------------------------------
-   */
+  /* =========================
+     BULK BUYER PROFILE UPDATE
+  ========================= */
 
-  const handleUpdateBuyer = (updatedBuyer) => {
-
+  const handleUpdateBulkBuyer = (updatedBulkBuyer) => {
     localStorage.setItem(
-      "annam-buyer",
-      JSON.stringify(updatedBuyer)
+      "annam-bulk-buyer",
+      JSON.stringify(updatedBulkBuyer)
     );
+
+    setBulkBuyer(updatedBulkBuyer);
   };
 
 
   return (
     <LanguageProvider>
-
       <BrowserRouter>
-
         <Routes>
 
-          {/* =================================
-              HOME
-          ================================= */}
+          {/* =========================
+              DEFAULT PAGE
+          ========================= */}
 
           <Route
             path="/"
             element={
-              <Navigate
-                to="/marketplace"
-                replace
-              />
+              buyer ? (
+                <Navigate
+                  to="/marketplace"
+                  replace
+                />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
             }
           />
 
 
-          {/* =================================
-              CONSUMER
-          ================================= */}
+          {/* =========================
+              CONSUMER LOGIN
+          ========================= */}
+
+          <Route
+            path="/login"
+            element={
+              buyer ? (
+                <Navigate
+                  to="/marketplace"
+                  replace
+                />
+              ) : (
+                <ConsumerLogin
+                  onLogin={handleLogin}
+                />
+              )
+            }
+          />
+
+
+          {/* =========================
+              CONSUMER MARKETPLACE
+          ========================= */}
 
           <Route
             path="/marketplace"
             element={
-              <Marketplace
-                buyer={buyer}
-              />
+              buyer ? (
+                <Marketplace
+                  buyer={buyer}
+                />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
             }
           />
 
 
-          <Route
-            path="/cart"
-            element={
-              <Cart />
-            }
-          />
-
-
-          <Route
-            path="/orders"
-            element={
-              <Orders />
-            }
-          />
-
+          {/* =========================
+              CONSUMER PROFILE
+          ========================= */}
 
           <Route
             path="/profile"
             element={
-              <ConsumerProfile
-                buyer={buyer}
-                onUpdateBuyer={handleUpdateBuyer}
-              />
+              buyer ? (
+                <ConsumerProfile
+                  buyer={buyer}
+                  onUpdateBuyer={handleUpdateBuyer}
+                />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
             }
           />
 
 
-          {/* =================================
-              CONSUMER PLACEHOLDERS
-          ================================= */}
+          {/* =========================
+              CONSUMER CART
+          ========================= */}
+
+          <Route
+            path="/cart"
+            element={
+              buyer ? (
+                <Cart />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
+            }
+          />
+
+
+          {/* =========================
+              CONSUMER ORDERS
+          ========================= */}
+
+          <Route
+            path="/orders"
+            element={
+              buyer ? (
+                <Orders />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
+            }
+          />
+
+          <Route
+            path="/orders/:orderId"
+            element={
+              buyer ? (
+                <OrderDetails />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
+            }
+          />
+
+
+          {/* =========================
+              CONSUMER NOTIFICATIONS
+          ========================= */}
 
           <Route
             path="/notifications"
             element={
-              <PagePlaceholder
-                title="Notifications"
-                description="Your ANNAM notifications will appear here."
-              />
+              buyer ? (
+                <Notifications />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
             }
           />
 
+
+          {/* =========================
+              CONSUMER TRACK DELIVERY
+          ========================= */}
 
           <Route
             path="/track-delivery"
             element={
-              <PagePlaceholder
-                title="Track Delivery"
-                description="Track your farm-fresh order delivery here."
-              />
+              buyer ? (
+                <TrackDelivery />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
             }
           />
 
 
-          {/* =================================
-              BULK BUYER
-          ================================= */}
+          {/* =========================
+              PAYMENTS
+          ========================= */}
+
+          <Route
+            path="/payment/success"
+            element={
+              buyer ? (
+                <PaymentSuccess />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
+            }
+          />
+
+          <Route
+            path="/payment/failed"
+            element={
+              buyer ? (
+                <PaymentFailed />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
+            }
+          />
+
+          <Route
+            path="/payment/:orderId"
+            element={
+              buyer ? (
+                <Payment />
+              ) : (
+                <Navigate
+                  to="/login"
+                  replace
+                />
+              )
+            }
+          />
+
+
+          {/* =========================
+              BULK BUYER LOGIN
+          ========================= */}
 
           <Route
             path="/bulk-login"
             element={
-              <BulkBuyerLogin
-                onLogin={handleBulkBuyerLogin}
-              />
+              bulkBuyer ? (
+                <Navigate
+                  to="/bulk-marketplace"
+                  replace
+                />
+              ) : (
+                <BulkBuyerLogin
+                  onLogin={handleBulkBuyerLogin}
+                />
+              )
             }
           />
 
+
+          {/* =========================
+              BULK BUYER MARKETPLACE
+          ========================= */}
 
           <Route
             path="/bulk-marketplace"
             element={
-              <BulkBuyerMarketplace
-                bulkBuyer={
-                  JSON.parse(
-                    localStorage.getItem(
-                      "annam-bulk-buyer"
-                    )
-                  ) || null
-                }
-              />
+              bulkBuyer ? (
+                <BulkBuyerMarketplace
+                  bulkBuyer={bulkBuyer}
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
             }
           />
 
 
-          {/* =================================
-              BULK BUYER PLACEHOLDERS
-          ================================= */}
+          {/* =========================
+              BULK BUYER REQUIREMENTS
+          ========================= */}
 
           <Route
             path="/bulk-requirements"
             element={
-              <PagePlaceholder
-                title="My Requirements"
-                description="Bulk procurement requirements will appear here."
-              />
+              bulkBuyer ? (
+                <TemporaryPage
+                  title="My Requirements"
+                  message="Bulk procurement requirements will appear here."
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
             }
           />
 
+
+          {/* =========================
+              BULK BUYER ORDERS
+          ========================= */}
 
           <Route
             path="/bulk-orders"
             element={
-              <PagePlaceholder
-                title="Bulk Orders"
-                description="Your bulk procurement orders will appear here."
-              />
+              bulkBuyer ? (
+                <TemporaryPage
+                  title="Bulk Orders"
+                  message="Your bulk procurement orders will appear here."
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
             }
           />
 
+
+          {/* =========================
+              BULK BUYER DELIVERY
+          ========================= */}
 
           <Route
             path="/bulk-track-delivery"
             element={
-              <PagePlaceholder
-                title="Bulk Delivery"
-                description="Track your bulk delivery here."
-              />
+              bulkBuyer ? (
+                <TemporaryPage
+                  title="Bulk Delivery"
+                  message="Track your bulk delivery here."
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
             }
           />
 
+
+          {/* =========================
+              BULK BUYER PROFILE
+          ========================= */}
 
           <Route
             path="/bulk-profile"
             element={
-              <PagePlaceholder
-                title="Bulk Buyer Profile"
-                description="Manage your business profile here."
-              />
+              bulkBuyer ? (
+                <BulkBuyerProfile
+                  bulkBuyer={bulkBuyer}
+                  onUpdateBulkBuyer={handleUpdateBulkBuyer}
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
             }
           />
 
+
+          {/* =========================
+              BULK PAYMENT HISTORY
+          ========================= */}
+
+          <Route
+            path="/bulk-payment-history"
+            element={
+              bulkBuyer ? (
+                <BulkPaymentHistory
+                  bulkBuyer={bulkBuyer}
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
+            }
+          />
+
+
+          {/* =========================
+              BULK NOTIFICATIONS
+          ========================= */}
 
           <Route
             path="/bulk-notifications"
             element={
-              <PagePlaceholder
-                title="Bulk Notifications"
-                description="Your procurement notifications will appear here."
-              />
+              bulkBuyer ? (
+                <TemporaryPage
+                  title="Bulk Notifications"
+                  message="Your procurement notifications will appear here."
+                />
+              ) : (
+                <Navigate
+                  to="/bulk-login"
+                  replace
+                />
+              )
             }
           />
 
 
-          {/* =================================
+          {/* =========================
               LOGISTICS
-          ================================= */}
+          ========================= */}
 
           <Route
             path="/logistics/*"
@@ -270,90 +573,26 @@ function App() {
           />
 
 
-          {/* =================================
+          {/* =========================
               FALLBACK
-          ================================= */}
+          ========================= */}
 
           <Route
             path="*"
             element={
               <Navigate
-                to="/marketplace"
+                to="/"
                 replace
               />
             }
           />
 
         </Routes>
-
       </BrowserRouter>
-
     </LanguageProvider>
   );
 }
 
 
-/*
- * =========================================
- * TEMPORARY PAGE PLACEHOLDER
- * =========================================
- *
- * We will replace these with the actual
- * teammate pages once we connect them.
- */
-
-function PagePlaceholder({
-  title,
-  description,
-}) {
-
-  return (
-    <main
-      style={{
-        minHeight: "100vh",
-        padding: "60px",
-        background: "#f7f8f3",
-      }}
-    >
-
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          background: "white",
-          padding: "50px",
-          borderRadius: "20px",
-          boxShadow:
-            "0 10px 30px rgba(0,0,0,0.06)",
-        }}
-      >
-
-        <p
-          style={{
-            color: "#4f7d45",
-            fontWeight: "700",
-            letterSpacing: "1px",
-          }}
-        >
-          ANNAM
-        </p>
-
-        <h1>{title}</h1>
-
-        <p
-          style={{
-            color: "#666",
-            fontSize: "17px",
-          }}
-        >
-          {description}
-        </p>
-
-      </div>
-
-    </main>
-  );
-}
-
-
 export default App;
+EOF
