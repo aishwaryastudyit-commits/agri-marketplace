@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../context/LanguageContext";
 import "../bulkBuyer.css";
 
 function BulkBuyerLogin({ onLogin }) {
   const navigate = useNavigate();
+
+  // Language selector
+  const { language, changeLanguage } = useLanguage();
 
   const [businessName, setBusinessName] = useState("");
   const [buyerName, setBuyerName] = useState("");
@@ -20,6 +24,243 @@ function BulkBuyerLogin({ onLogin }) {
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
 
   /* =========================
+     LANGUAGE TEXT
+  ========================= */
+
+  const text = {
+    english: {
+      bulkBuyerPortal: "BULK BUYER PORTAL",
+      joinAnnam: "Join ANNAM",
+      businessDescription:
+        "Enter your business details to start sourcing directly from farmers.",
+
+      bulkBuyerTagline: "Bulk Buyer Portal",
+      heroTitle: "Buy directly from farmers,",
+      heroTitle2: "in the quantity you need.",
+      heroDescription:
+        "Connect directly with farmers and source fresh agricultural products for your business.",
+
+      directAccess: "Direct access to farmers",
+      largeQuantity: "Large quantity procurement",
+      logistics: "Logistics and delivery support",
+
+      businessShopName: "Business / Shop Name",
+      enterBusinessName: "Enter your business name",
+
+      yourName: "Your Name",
+      enterFullName: "Enter your full name",
+
+      businessType: "Business Type",
+      selectBusinessType: "Select business type",
+      wholesaleMarket: "Wholesale Market",
+      retailShop: "Retail Shop",
+      supermarket: "Supermarket",
+
+      mobileNumber: "Mobile Number",
+      enterMobileNumber: "Enter mobile number",
+      sendVerificationCode: "Send Verification Code",
+
+      verificationCode: "Verification Code",
+      enterVerificationCode:
+        "Enter 6-digit verification code",
+      confirmVerification:
+        "Confirm Verification Code",
+
+      businessLocation: "Business Location",
+      enterCityArea: "Enter city or area",
+
+      continue: "Continue to Bulk Marketplace →",
+
+      footer:
+        "Source directly. Buy smarter. Support farmers.",
+
+      enterBusinessAlert:
+        "Please enter your business name.",
+      enterNameAlert: "Please enter your name.",
+      enterMobileAlert:
+        "Please enter your mobile number.",
+      verifyMobileAlert:
+        "Please verify your mobile number before continuing.",
+      selectBusinessAlert:
+        "Please select your business type.",
+      enterLocationAlert:
+        "Please enter your location.",
+
+      validIndianMobile:
+        "Please enter a valid Indian mobile number.",
+      validMobile:
+        "Please enter a valid mobile number.",
+      mobileFirst:
+        "Please enter your mobile number first.",
+      verificationSent:
+        "Verification code sent! Demo OTP: 123456",
+      enterVerification:
+        "Please enter the verification code.",
+      mobileVerified:
+        "Mobile number verified successfully!",
+      invalidVerification:
+        "Invalid verification code. Please try again.",
+    },
+
+    tamil: {
+      bulkBuyerPortal: "மொத்த வாங்குபவர் போர்டல்",
+      joinAnnam: "ANNAM-க்கு வரவேற்கிறோம்",
+      businessDescription:
+        "விவசாயிகளிடமிருந்து நேரடியாக வாங்க உங்கள் வணிக விவரங்களை உள்ளிடவும்.",
+
+      bulkBuyerTagline: "மொத்த வாங்குபவர் போர்டல்",
+      heroTitle: "விவசாயிகளிடமிருந்து நேரடியாக வாங்குங்கள்,",
+      heroTitle2: "உங்களுக்கு தேவையான அளவில்.",
+      heroDescription:
+        "விவசாயிகளுடன் நேரடியாக இணைந்து உங்கள் வணிகத்திற்குத் தேவையான புதிய விவசாயப் பொருட்களைப் பெறுங்கள்.",
+
+      directAccess: "விவசாயிகளுக்கு நேரடி அணுகல்",
+      largeQuantity: "பெரிய அளவிலான கொள்முதல்",
+      logistics: "போக்குவரத்து மற்றும் விநியோக ஆதரவு",
+
+      businessShopName: "வணிகம் / கடை பெயர்",
+      enterBusinessName: "உங்கள் வணிகப் பெயரை உள்ளிடவும்",
+
+      yourName: "உங்கள் பெயர்",
+      enterFullName: "உங்கள் முழுப் பெயரை உள்ளிடவும்",
+
+      businessType: "வணிக வகை",
+      selectBusinessType: "வணிக வகையைத் தேர்ந்தெடுக்கவும்",
+      wholesaleMarket: "மொத்த சந்தை",
+      retailShop: "சில்லறை கடை",
+      supermarket: "சூப்பர் மார்க்கெட்",
+
+      mobileNumber: "மொபைல் எண்",
+      enterMobileNumber: "மொபைல் எண்ணை உள்ளிடவும்",
+      sendVerificationCode: "சரிபார்ப்பு குறியீட்டை அனுப்பவும்",
+
+      verificationCode: "சரிபார்ப்பு குறியீடு",
+      enterVerificationCode:
+        "6 இலக்க சரிபார்ப்பு குறியீட்டை உள்ளிடவும்",
+      confirmVerification:
+        "சரிபார்ப்பு குறியீட்டை உறுதிப்படுத்தவும்",
+
+      businessLocation: "வணிக இருப்பிடம்",
+      enterCityArea: "நகரம் அல்லது பகுதியை உள்ளிடவும்",
+
+      continue: "மொத்த சந்தைக்கு தொடரவும் →",
+
+      footer:
+        "நேரடியாக வாங்குங்கள். புத்திசாலித்தனமாக வாங்குங்கள். விவசாயிகளை ஆதரிக்கவும்.",
+
+      enterBusinessAlert:
+        "உங்கள் வணிகப் பெயரை உள்ளிடவும்.",
+      enterNameAlert: "உங்கள் பெயரை உள்ளிடவும்.",
+      enterMobileAlert:
+        "உங்கள் மொபைல் எண்ணை உள்ளிடவும்.",
+      verifyMobileAlert:
+        "தொடர்வதற்கு முன் உங்கள் மொபைல் எண்ணைச் சரிபார்க்கவும்.",
+      selectBusinessAlert:
+        "உங்கள் வணிக வகையைத் தேர்ந்தெடுக்கவும்.",
+      enterLocationAlert:
+        "உங்கள் இருப்பிடத்தை உள்ளிடவும்.",
+
+      validIndianMobile:
+        "சரியான இந்திய மொபைல் எண்ணை உள்ளிடவும்.",
+      validMobile:
+        "சரியான மொபைல் எண்ணை உள்ளிடவும்.",
+      mobileFirst:
+        "முதலில் உங்கள் மொபைல் எண்ணை உள்ளிடவும்.",
+      verificationSent:
+        "சரிபார்ப்பு குறியீடு அனுப்பப்பட்டது! டெமோ OTP: 123456",
+      enterVerification:
+        "சரிபார்ப்பு குறியீட்டை உள்ளிடவும்.",
+      mobileVerified:
+        "மொபைல் எண் வெற்றிகரமாக சரிபார்க்கப்பட்டது!",
+      invalidVerification:
+        "தவறான சரிபார்ப்பு குறியீடு. மீண்டும் முயற்சிக்கவும்.",
+    },
+
+    hindi: {
+      bulkBuyerPortal: "थोक खरीदार पोर्टल",
+      joinAnnam: "ANNAM में शामिल हों",
+      businessDescription:
+        "किसानों से सीधे खरीदारी शुरू करने के लिए अपने व्यवसाय का विवरण दर्ज करें।",
+
+      bulkBuyerTagline: "थोक खरीदार पोर्टल",
+      heroTitle: "किसानों से सीधे खरीदें,",
+      heroTitle2: "अपनी आवश्यकता के अनुसार मात्रा में।",
+      heroDescription:
+        "किसानों से सीधे जुड़ें और अपने व्यवसाय के लिए ताज़ा कृषि उत्पाद प्राप्त करें।",
+
+      directAccess: "किसानों तक सीधी पहुंच",
+      largeQuantity: "बड़ी मात्रा में खरीदारी",
+      logistics: "लॉजिस्टिक्स और डिलीवरी सहायता",
+
+      businessShopName: "व्यवसाय / दुकान का नाम",
+      enterBusinessName:
+        "अपने व्यवसाय का नाम दर्ज करें",
+
+      yourName: "आपका नाम",
+      enterFullName: "अपना पूरा नाम दर्ज करें",
+
+      businessType: "व्यवसाय का प्रकार",
+      selectBusinessType:
+        "व्यवसाय का प्रकार चुनें",
+      wholesaleMarket: "थोक बाजार",
+      retailShop: "रिटेल दुकान",
+      supermarket: "सुपरमार्केट",
+
+      mobileNumber: "मोबाइल नंबर",
+      enterMobileNumber:
+        "मोबाइल नंबर दर्ज करें",
+      sendVerificationCode:
+        "सत्यापन कोड भेजें",
+
+      verificationCode: "सत्यापन कोड",
+      enterVerificationCode:
+        "6 अंकों का सत्यापन कोड दर्ज करें",
+      confirmVerification:
+        "सत्यापन कोड की पुष्टि करें",
+
+      businessLocation: "व्यवसाय का स्थान",
+      enterCityArea:
+        "शहर या क्षेत्र दर्ज करें",
+
+      continue: "थोक मार्केटप्लेस पर जारी रखें →",
+
+      footer:
+        "सीधे खरीदें। समझदारी से खरीदें। किसानों का समर्थन करें।",
+
+      enterBusinessAlert:
+        "कृपया अपने व्यवसाय का नाम दर्ज करें।",
+      enterNameAlert:
+        "कृपया अपना नाम दर्ज करें।",
+      enterMobileAlert:
+        "कृपया अपना मोबाइल नंबर दर्ज करें।",
+      verifyMobileAlert:
+        "जारी रखने से पहले अपना मोबाइल नंबर सत्यापित करें।",
+      selectBusinessAlert:
+        "कृपया अपने व्यवसाय का प्रकार चुनें।",
+      enterLocationAlert:
+        "कृपया अपना स्थान दर्ज करें।",
+
+      validIndianMobile:
+        "कृपया एक मान्य भारतीय मोबाइल नंबर दर्ज करें।",
+      validMobile:
+        "कृपया एक मान्य मोबाइल नंबर दर्ज करें।",
+      mobileFirst:
+        "कृपया पहले अपना मोबाइल नंबर दर्ज करें।",
+      verificationSent:
+        "सत्यापन कोड भेजा गया! डेमो OTP: 123456",
+      enterVerification:
+        "कृपया सत्यापन कोड दर्ज करें।",
+      mobileVerified:
+        "मोबाइल नंबर सफलतापूर्वक सत्यापित हो गया!",
+      invalidVerification:
+        "अमान्य सत्यापन कोड। कृपया पुनः प्रयास करें।",
+    },
+  };
+
+  const currentText =
+    text[language] || text.english;
+
+  /* =========================
      PHONE NUMBER VALIDATION
   ========================= */
 
@@ -29,20 +270,14 @@ function BulkBuyerLogin({ onLogin }) {
       const indianMobileRegex = /^[6-9]\d{9}$/;
 
       if (!indianMobileRegex.test(phone)) {
-        alert(
-          "Please enter a valid Indian mobile number."
-        );
-
+        alert(currentText.validIndianMobile);
         return false;
       }
     }
 
     // Basic validation for other countries
     if (countryCode !== "+91" && phone.length < 6) {
-      alert(
-        "Please enter a valid mobile number."
-      );
-
+      alert(currentText.validMobile);
       return false;
     }
 
@@ -55,10 +290,7 @@ function BulkBuyerLogin({ onLogin }) {
 
   const handleSendOtp = () => {
     if (!phone.trim()) {
-      alert(
-        "Please enter your mobile number first."
-      );
-
+      alert(currentText.mobileFirst);
       return;
     }
 
@@ -73,9 +305,7 @@ function BulkBuyerLogin({ onLogin }) {
     setOtp("");
     setIsPhoneVerified(false);
 
-    alert(
-      "Verification code sent! Demo OTP: 123456"
-    );
+    alert(currentText.verificationSent);
   };
 
   /* =========================
@@ -84,23 +314,16 @@ function BulkBuyerLogin({ onLogin }) {
 
   const handleVerifyOtp = () => {
     if (!otp.trim()) {
-      alert(
-        "Please enter the verification code."
-      );
-
+      alert(currentText.enterVerification);
       return;
     }
 
     if (otp === "123456") {
       setIsPhoneVerified(true);
 
-      alert(
-        "Mobile number verified successfully!"
-      );
+      alert(currentText.mobileVerified);
     } else {
-      alert(
-        "Invalid verification code. Please try again."
-      );
+      alert(currentText.invalidVerification);
     }
   };
 
@@ -112,50 +335,32 @@ function BulkBuyerLogin({ onLogin }) {
     event.preventDefault();
 
     if (!businessName.trim()) {
-      alert(
-        "Please enter your business name."
-      );
-
+      alert(currentText.enterBusinessAlert);
       return;
     }
 
     if (!buyerName.trim()) {
-      alert(
-        "Please enter your name."
-      );
-
+      alert(currentText.enterNameAlert);
       return;
     }
 
     if (!phone.trim()) {
-      alert(
-        "Please enter your mobile number."
-      );
-
+      alert(currentText.enterMobileAlert);
       return;
     }
 
     if (!isPhoneVerified) {
-      alert(
-        "Please verify your mobile number before continuing."
-      );
-
+      alert(currentText.verifyMobileAlert);
       return;
     }
 
     if (!businessType) {
-      alert(
-        "Please select your business type."
-      );
-
+      alert(currentText.selectBusinessAlert);
       return;
     }
 
     if (!location.trim()) {
-      alert(
-        "Please enter your location."
-      );
-
+      alert(currentText.enterLocationAlert);
       return;
     }
 
@@ -188,6 +393,107 @@ function BulkBuyerLogin({ onLogin }) {
   return (
     <div className="login-page">
 
+      {/* =========================
+          LANGUAGE SELECTOR
+      ========================= */}
+
+      <div
+        style={{
+          position: "absolute",
+          top: "18px",
+          right: "24px",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+          background: "#e9eceb",
+          borderRadius: "18px",
+          padding: "3px 6px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "13px",
+            padding: "4px 5px",
+          }}
+        >
+          🌐
+        </span>
+
+        <button
+          type="button"
+          onClick={() =>
+            changeLanguage("english")
+          }
+          style={{
+            border: "none",
+            borderRadius: "12px",
+            padding: "5px 10px",
+            cursor: "pointer",
+            fontSize: "12px",
+            background:
+              language === "english"
+                ? "#0d6248"
+                : "transparent",
+            color:
+              language === "english"
+                ? "white"
+                : "#174936",
+          }}
+        >
+          English
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            changeLanguage("tamil")
+          }
+          style={{
+            border: "none",
+            borderRadius: "12px",
+            padding: "5px 10px",
+            cursor: "pointer",
+            fontSize: "12px",
+            background:
+              language === "tamil"
+                ? "#0d6248"
+                : "transparent",
+            color:
+              language === "tamil"
+                ? "white"
+                : "#174936",
+          }}
+        >
+          தமிழ்
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            changeLanguage("hindi")
+          }
+          style={{
+            border: "none",
+            borderRadius: "12px",
+            padding: "5px 10px",
+            cursor: "pointer",
+            fontSize: "12px",
+            background:
+              language === "hindi"
+                ? "#0d6248"
+                : "transparent",
+            color:
+              language === "hindi"
+                ? "white"
+                : "#174936",
+          }}
+        >
+          हिन्दी
+        </button>
+      </div>
+
+
       <div className="login-wrapper">
 
         {/* =========================
@@ -203,18 +509,17 @@ function BulkBuyerLogin({ onLogin }) {
             </div>
 
             <p className="login-brand-tagline">
-              Bulk Buyer Portal
+              {currentText.bulkBuyerTagline}
             </p>
 
             <h1>
-              Buy directly from farmers,
+              {currentText.heroTitle}
               <br />
-              in the quantity you need.
+              {currentText.heroTitle2}
             </h1>
 
             <p className="login-brand-description">
-              Connect directly with farmers and source
-              fresh agricultural products for your business.
+              {currentText.heroDescription}
             </p>
 
             <div className="login-features">
@@ -223,7 +528,7 @@ function BulkBuyerLogin({ onLogin }) {
                 <span>🌾</span>
 
                 <p>
-                  Direct access to farmers
+                  {currentText.directAccess}
                 </p>
               </div>
 
@@ -231,7 +536,7 @@ function BulkBuyerLogin({ onLogin }) {
                 <span>📦</span>
 
                 <p>
-                  Large quantity procurement
+                  {currentText.largeQuantity}
                 </p>
               </div>
 
@@ -239,7 +544,7 @@ function BulkBuyerLogin({ onLogin }) {
                 <span>🚚</span>
 
                 <p>
-                  Logistics and delivery support
+                  {currentText.logistics}
                 </p>
               </div>
 
@@ -261,16 +566,15 @@ function BulkBuyerLogin({ onLogin }) {
             <div className="login-heading">
 
               <p className="login-kicker">
-                BULK BUYER PORTAL
+                {currentText.bulkBuyerPortal}
               </p>
 
               <h2>
-                Join ANNAM
+                {currentText.joinAnnam}
               </h2>
 
               <p>
-                Enter your business details to start
-                sourcing directly from farmers.
+                {currentText.businessDescription}
               </p>
 
             </div>
@@ -285,12 +589,14 @@ function BulkBuyerLogin({ onLogin }) {
               <div className="login-field">
 
                 <label>
-                  Business / Shop Name
+                  {currentText.businessShopName}
                 </label>
 
                 <input
                   type="text"
-                  placeholder="Enter your business name"
+                  placeholder={
+                    currentText.enterBusinessName
+                  }
                   value={businessName}
                   onChange={(event) =>
                     setBusinessName(
@@ -309,12 +615,14 @@ function BulkBuyerLogin({ onLogin }) {
               <div className="login-field">
 
                 <label>
-                  Your Name
+                  {currentText.yourName}
                 </label>
 
                 <input
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder={
+                    currentText.enterFullName
+                  }
                   value={buyerName}
                   onChange={(event) =>
                     setBuyerName(
@@ -333,7 +641,7 @@ function BulkBuyerLogin({ onLogin }) {
               <div className="login-field">
 
                 <label>
-                  Business Type
+                  {currentText.businessType}
                 </label>
 
                 <select
@@ -346,31 +654,19 @@ function BulkBuyerLogin({ onLogin }) {
                 >
 
                   <option value="">
-                    Select business type
+                    {currentText.selectBusinessType}
                   </option>
 
                   <option value="wholesale_market">
-                    Wholesale Market
+                    {currentText.wholesaleMarket}
                   </option>
 
                   <option value="retail_shop">
-                    Retail Shop
+                    {currentText.retailShop}
                   </option>
 
                   <option value="supermarket">
-                    Supermarket
-                  </option>
-
-                  <option value="restaurant_hotel">
-                    Restaurant / Hotel
-                  </option>
-
-                  <option value="food_processing">
-                    Food Processing Business
-                  </option>
-
-                  <option value="other">
-                    Other
+                    {currentText.supermarket}
                   </option>
 
                 </select>
@@ -385,18 +681,16 @@ function BulkBuyerLogin({ onLogin }) {
               <div className="login-field">
 
                 <label>
-                  Mobile Number
+                  {currentText.mobileNumber}
                 </label>
-
 
                 <div
                   style={{
                     display: "flex",
                     gap: "10px",
+                    width: "100%",
                   }}
                 >
-
-                  {/* COUNTRY CODE */}
 
                   <select
                     value={countryCode}
@@ -412,37 +706,36 @@ function BulkBuyerLogin({ onLogin }) {
                     }}
                     style={{
                       width: "120px",
-                      flexShrink: 0,
                     }}
                   >
-
                     <option value="+91">
-                      +91 🇮🇳
+                      +91 IN
                     </option>
 
                     <option value="+1">
-                      +1 🇺🇸
+                      +1 US
                     </option>
 
                     <option value="+44">
-                      +44 🇬🇧
+                      +44 UK
+                    </option>
+
+                    <option value="+61">
+                      +61 AU
                     </option>
 
                     <option value="+971">
-                      +971 🇦🇪
+                      +971 UAE
                     </option>
-
                   </select>
-
-
-                  {/* MOBILE NUMBER */}
 
                   <input
                     type="tel"
-                    placeholder="Enter mobile number"
+                    placeholder={
+                      currentText.enterMobileNumber
+                    }
                     value={phone}
                     disabled={isPhoneVerified}
-                    inputMode="numeric"
                     onChange={(event) => {
                       const value =
                         event.target.value.replace(
@@ -450,17 +743,8 @@ function BulkBuyerLogin({ onLogin }) {
                           ""
                         );
 
-                      // India maximum 10 digits
-                      if (
-                        countryCode === "+91" &&
-                        value.length > 10
-                      ) {
-                        return;
-                      }
-
                       setPhone(value);
 
-                      // Reset verification
                       setOtpSent(false);
                       setOtp("");
                       setIsPhoneVerified(false);
@@ -470,33 +754,30 @@ function BulkBuyerLogin({ onLogin }) {
                 </div>
 
 
-                {/* VERIFY BUTTON */}
-
                 {!isPhoneVerified && (
                   <button
                     type="button"
                     className="login-button"
                     onClick={handleSendOtp}
                     style={{
-                      marginTop: "12px",
+                      marginTop: "10px",
                     }}
                   >
-                    Verify Mobile Number
+                    {currentText.sendVerificationCode}
                   </button>
                 )}
 
 
-                {/* VERIFIED MESSAGE */}
-
                 {isPhoneVerified && (
                   <p
                     style={{
-                      marginTop: "10px",
-                      color: "#2f7d32",
+                      marginTop: "8px",
+                      color: "#0d6248",
+                      fontSize: "14px",
                       fontWeight: "600",
                     }}
                   >
-                    ✓ Mobile number verified
+                    ✓ {currentText.mobileVerified}
                   </p>
                 )}
 
@@ -512,12 +793,14 @@ function BulkBuyerLogin({ onLogin }) {
                 <div className="login-field">
 
                   <label>
-                    Verification Code
+                    {currentText.verificationCode}
                   </label>
 
                   <input
                     type="text"
-                    placeholder="Enter 6-digit verification code"
+                    placeholder={
+                      currentText.enterVerificationCode
+                    }
                     value={otp}
                     maxLength="6"
                     inputMode="numeric"
@@ -540,7 +823,7 @@ function BulkBuyerLogin({ onLogin }) {
                       marginTop: "10px",
                     }}
                   >
-                    Confirm Verification Code
+                    {currentText.confirmVerification}
                   </button>
 
                 </div>
@@ -555,12 +838,14 @@ function BulkBuyerLogin({ onLogin }) {
               <div className="login-field">
 
                 <label>
-                  Business Location
+                  {currentText.businessLocation}
                 </label>
 
                 <input
                   type="text"
-                  placeholder="Enter city or area"
+                  placeholder={
+                    currentText.enterCityArea
+                  }
                   value={location}
                   onChange={(event) =>
                     setLocation(
@@ -580,14 +865,14 @@ function BulkBuyerLogin({ onLogin }) {
                 type="submit"
                 className="login-button"
               >
-                Continue to Bulk Marketplace →
+                {currentText.continue}
               </button>
 
             </form>
 
 
             <p className="login-footer-text">
-              Source directly. Buy smarter. Support farmers.
+              {currentText.footer}
             </p>
 
           </div>

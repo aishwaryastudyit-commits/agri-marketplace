@@ -1776,3 +1776,75 @@
     grid-template-columns: 1fr;
   }
 }
+/* ================================
+   LOGIN LANGUAGE SELECTOR
+   ================================ */
+
+.login-page {
+  position: relative;
+}
+
+.login-page > div:first-child {
+  position: absolute !important;
+  top: 18px !important;
+  right: 24px !important;
+  z-index: 1000 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+
+  background: #e9eceb !important;
+  border-radius: 18px !important;
+  padding: 3px 6px !important;
+}
+
+/* Globe icon */
+.login-page > div:first-child span {
+  font-size: 13px !important;
+  padding: 4px 5px !important;
+}
+
+/* LANGUAGE SELECTOR */
+
+.login-language-selector {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  background: #e9eceb;
+  border-radius: 18px;
+  padding: 3px 6px;
+}
+
+.login-language-selector button {
+  border: none;
+  border-radius: 12px;
+  padding: 5px 10px;
+
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+
+  background: transparent;
+  color: #174936;
+}
+
+.login-language-selector button.active {
+  background: #0d6248;
+  color: white;
+}
+
+.login-language-selector button:hover {
+  background: #dce5e1;
+}
+
+.login-language-selector button.active:hover {
+  background: #0d6248;
+  color: white;
+}
