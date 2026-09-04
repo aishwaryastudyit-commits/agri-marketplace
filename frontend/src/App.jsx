@@ -70,6 +70,57 @@ function TemporaryPage({ title, message }) {
 }
 
 
+/* =========================
+   BULK BUYER TEMPORARY PAGE
+========================= */
+
+function BulkTemporaryPage({ title, message }) {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "40px",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => navigate("/bulk-marketplace")}
+        style={{
+          marginBottom: "30px",
+          padding: "10px 18px",
+          cursor: "pointer",
+        }}
+      >
+        ← Back to Marketplace
+      </button>
+
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          padding: "40px",
+          borderRadius: "15px",
+          border: "1px solid #ddd",
+        }}
+      >
+        <h1>{title}</h1>
+
+        <p
+          style={{
+            marginTop: "15px",
+            fontSize: "16px",
+          }}
+        >
+          {message}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 function App() {
 
   /* =========================
@@ -276,6 +327,72 @@ function App() {
             bulkBuyer ? (
               <BulkBuyerMarketplace
                 bulkBuyer={bulkBuyer}
+              />
+            ) : (
+              <Navigate
+                to="/bulk-login"
+                replace
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            BULK BUYER REQUIREMENTS
+        ========================= */}
+
+        <Route
+          path="/bulk-requirements"
+          element={
+            bulkBuyer ? (
+              <BulkTemporaryPage
+                title="My Requirements"
+                message="Your procurement requirements and supplier requests will appear here."
+              />
+            ) : (
+              <Navigate
+                to="/bulk-login"
+                replace
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            BULK BUYER ORDERS
+        ========================= */}
+
+        <Route
+          path="/bulk-orders"
+          element={
+            bulkBuyer ? (
+              <BulkTemporaryPage
+                title="Bulk Orders"
+                message="Your confirmed bulk orders from farmers will appear here."
+              />
+            ) : (
+              <Navigate
+                to="/bulk-login"
+                replace
+              />
+            )
+          }
+        />
+
+
+        {/* =========================
+            BULK BUYER TRACK DELIVERY
+        ========================= */}
+
+        <Route
+          path="/bulk-track-delivery"
+          element={
+            bulkBuyer ? (
+              <BulkTemporaryPage
+                title="Track Delivery"
+                message="Track your bulk procurement deliveries here."
               />
             ) : (
               <Navigate
