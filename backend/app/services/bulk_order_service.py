@@ -1,8 +1,29 @@
 from sqlalchemy.orm import Session
 
-from app.models.user import User
+from app.models.buyer import Buyer
 from app.models.order import Order
 from app.models.product import Product
+from app.models.farmer import Farmer
+from app.models.payment import Payment
+from app.services.logistics_service import queue_delivery
+
+
+def bulk_order_payload(order, product=None, farmer=None, payment=None):
+    return {
+        "id": order.id,
+        "buyer_id": order.buyer_id,
+        "product_id": order.product_id,
+        "product": product.name if product else f"Product #{order.product_id}",
+        "farmer": farmer.full_name if farmer else (product.farmer_name if product else "Farmer"),
+        "unit": product.unit if product else "kg",
+        "price": product.price if product else 0,
+        "quantity": order.quantity,
+        "total_amount": order.total_amount,
+        "status": order.status,
+        "payment_status": payment.payment_status if payment else "pending",
+        "payment_id": payment.id if payment else None,
+        "created_at": order.created_at,
+    }
 
 
 # =========================================================
@@ -16,8 +37,8 @@ def create_bulk_order(
 ):
     # Check buyer
     buyer = (
-        db.query(User)
-        .filter(User.id == buyer_id)
+        db.query(Buyer)
+        .filter(Buyer.id == buyer_id)
         .first()
     )
 
@@ -88,6 +109,8 @@ def create_bulk_order(
 
             db.flush()
 
+            queue_delivery(db, order, buyer)
+
             created_orders.append(order)
 
         db.commit()
@@ -111,20 +134,24 @@ def get_buyer_bulk_orders(
     buyer_id: int
 ):
     buyer = (
-        db.query(User)
-        .filter(User.id == buyer_id)
+        db.query(Buyer)
+        .filter(Buyer.id == buyer_id)
         .first()
     )
 
     if not buyer:
         raise ValueError("Buyer not found")
 
-    return (
-        db.query(Order)
+    rows = (
+        db.query(Order, Product, Farmer, Payment)
+        .join(Product, Order.product_id == Product.id)
+        .outerjoin(Farmer, Product.farmer_id == Farmer.id)
+        .outerjoin(Payment, Payment.order_id == Order.id)
         .filter(Order.buyer_id == buyer_id)
         .order_by(Order.created_at.desc())
         .all()
     )
+    return [bulk_order_payload(order, product, farmer, payment) for order, product, farmer, payment in rows]
 
 
 # =========================================================

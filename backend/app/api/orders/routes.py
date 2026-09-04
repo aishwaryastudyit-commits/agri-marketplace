@@ -14,9 +14,26 @@ router = APIRouter()
 
 @router.get("/")
 def get_orders(
+    buyer_id: int = None,
     db: Session = Depends(get_db)
 ):
-    return order_service.get_all_orders(db)
+    return order_service.get_all_orders(db, buyer_id=buyer_id)
+
+
+@router.get("/{order_id}")
+def get_order(order_id: int, db: Session = Depends(get_db)):
+    order = order_service.get_order(db, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return order
+
+
+@router.put("/{order_id}/cancel")
+def cancel_order(order_id: int, db: Session = Depends(get_db)):
+    try:
+        return order_service.cancel_order(db, order_id)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
 
 
 # =========================================================

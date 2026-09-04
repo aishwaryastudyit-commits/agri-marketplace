@@ -1,0 +1,51 @@
+.tracking-grid { display: grid; gap: 18px; }
+.tracking-card { padding: 24px; background: rgba(255, 254, 250, .92); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.tracking-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.tracking-card-header h2 { margin: 5px 0 0; font: 600 1.35rem "Space Grotesk", sans-serif; }
+.tracking-product { display: flex; align-items: center; gap: 12px; margin: 22px 0; }
+.tracking-product strong, .tracking-product span { display: block; }
+.tracking-product span { margin-top: 4px; color: var(--muted); font-size: .9rem; }
+.tracking-current { display: grid; gap: 5px; padding: 14px 16px; border-radius: 10px; background: var(--mint); color: var(--primary-dark); }
+.tracking-current span { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.tracking-driver { margin: 12px 0 0; color: var(--muted); font-size: .88rem; }
+.tracking-route { display: flex; align-items: center; gap: 8px; margin: 20px 0 10px; color: var(--muted); font-size: .82rem; }
+.tracking-route span { flex: 1; }
+.tracking-route span:last-child { text-align: right; }
+.tracking-route i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--mint); }
+.tracking-progress { height: 8px; overflow: hidden; border-radius: 99px; background: var(--line); }
+.tracking-progress span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .3s ease; }
+.tracking-caption { margin: 12px 0 18px; color: var(--muted); font-size: .88rem; }
+.route-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding: 13px 15px; border: 1px solid #b8d9c0; border-radius: 10px; color: var(--primary); background: #f2faf3; font-weight: 700; text-align: left; }
+.route-toggle:hover { background: var(--mint); }
+.route-toggle b { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; color: white; background: var(--primary); font-size: 1.25rem; line-height: 1; }
+.journey-panel { position: relative; margin: 18px 0 0; padding: 8px 0 4px; }
+.journey-progress { position: absolute; top: 21px; bottom: 22px; left: 12px; width: 3px; overflow: hidden; border-radius: 9px; background: #dbe9df; }
+.journey-progress span { display: block; width: 100% !important; height: 0; border-radius: inherit; background: var(--primary); animation: journey-fill .5s ease forwards; }
+.journey-step { position: relative; display: grid; grid-template-columns: 26px 1fr; gap: 12px; padding: 0 0 18px; color: var(--muted); }
+.journey-step:last-of-type { padding-bottom: 6px; }
+.journey-dot { z-index: 1; display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid #bdd7c4; border-radius: 50%; color: #6d7c74; background: #fffefa; font-size: .75rem; font-weight: 700; }
+.journey-step.done .journey-dot, .journey-step.active .journey-dot { border-color: var(--primary); color: white; background: var(--primary); }
+.journey-step.active .journey-dot { box-shadow: 0 0 0 5px #dcefe2; }
+.journey-step strong { display: block; color: var(--ink); font-size: .92rem; }
+.journey-step p { margin: 3px 0 0; font-size: .82rem; line-height: 1.4; }
+.journey-panel .tracking-driver { margin: 4px 0 0 38px; padding: 10px 12px; border-radius: 9px; background: #f6f9f6; }
+@keyframes journey-fill { to { height: 100%; } }
+.route-checkpoints { margin: 18px 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.route-checkpoints summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; cursor: pointer; color: var(--primary-dark); font-size: .9rem; font-weight: 700; list-style: none; }
+.route-checkpoints summary::-webkit-details-marker { display: none; }
+.route-checkpoints summary::after { content: "⌄"; flex: 0 0 auto; font-size: 1.2rem; transition: transform .2s ease; }
+.route-checkpoints[open] summary::after { transform: rotate(180deg); }
+.route-summary-text { overflow: hidden; color: var(--muted); font-size: .78rem; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.route-checkpoints ol { margin: 0; padding: 4px 16px 16px; list-style: none; }
+.checkpoint { position: relative; display: flex; gap: 12px; padding: 10px 0; color: var(--muted); }
+.checkpoint:not(:last-child)::before { position: absolute; top: 36px; left: 12px; width: 2px; height: calc(100% - 12px); background: var(--line); content: ""; }
+.checkpoint-marker { position: relative; z-index: 1; display: grid; width: 24px; height: 24px; flex: 0 0 24px; place-items: center; border: 2px solid var(--line); border-radius: 50%; background: #fff; color: var(--muted); font-size: .72rem; font-weight: 800; }
+.checkpoint strong, .checkpoint div > span { display: block; }
+.checkpoint strong { color: #26372d; font-size: .9rem; }
+.checkpoint div > span { margin-top: 2px; font-size: .76rem; }
+.checkpoint.completed .checkpoint-marker { border-color: var(--primary); background: var(--primary); color: #fff; }
+.checkpoint.completed:not(:last-child)::before { background: var(--primary); }
+.checkpoint.current { color: var(--primary-dark); }
+.checkpoint.current .checkpoint-marker { border-color: var(--primary); box-shadow: 0 0 0 4px var(--mint); color: var(--primary-dark); }
+@media (max-width: 620px) { .route-checkpoints summary { align-items: flex-start; } .route-summary-text { display: none; } }
+@media (max-width: 620px) { .tracking-card { padding: 18px; } .tracking-route { gap: 5px; font-size: .72rem; } }

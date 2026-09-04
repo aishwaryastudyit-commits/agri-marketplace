@@ -52,15 +52,20 @@ export default function Workers() {
     }));
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.vehicleNumber) {
       alert('Please fill out Name, Phone, and Vehicle Number.');
       return;
     }
 
-    registerWorker(formData);
-    setIsRegisterModalOpen(false);
+    try {
+      await registerWorker(formData);
+      setIsRegisterModalOpen(false);
+    } catch (error) {
+      alert(error.message || 'Could not register the worker.');
+      return;
+    }
     setFormData({
       name: '',
       phone: '',

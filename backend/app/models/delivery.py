@@ -16,3 +16,7 @@ class Delivery(Base):
     assigned_driver = Column(String, nullable=True)
 
     tracking_number = Column(String, nullable=True)
+
+    current_location = Column(String, nullable=True)
+
+    route = Column(String, nullable=True)

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext.jsx";
+import { ConsumerOrdersPanel, ConsumerTrackingPanel } from "./ConsumerAccountPanels.jsx";
 import "../consumer.css";
+import { getTrendingProducts } from "../../../services/aiService";
+import { addCartItem, getAllProducts, getCart } from "../../../services/annamService";
 
 const categories = [
   {
@@ -58,6 +61,16 @@ const categories = [
 ];
 
 const productImages = {
+  rice: "https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=1200&q=85",
+  basmati: "https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=1200&q=85",
+  wheat: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=1200&q=85",
+  fruit: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=1200&q=85",
+  mango: "https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=1200&q=85",
+  banana: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?auto=format&fit=crop&w=1200&q=85",
+  milk: "https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=1200&q=85",
+  spice: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=1200&q=85",
+  flower: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=85",
+  leafy: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=1200&q=85",
   tomato:
     "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=900&q=80",
 
@@ -85,6 +98,8 @@ const productImages = {
   default:
     "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80",
 };
+
+const categoryImageKeys = { grains: "rice", fruits: "fruit", vegetables: "tomato", "leafy greens": "leafy", dairy: "milk", spices: "spice", flowers: "flower" };
 
 function SearchIcon() {
   return (
@@ -152,6 +167,8 @@ function Marketplace({ buyer }) {
 
   const [error, setError] =
     useState("");
+  const [aiTrends, setAiTrends] = useState([]);
+  const [aiStatus, setAiStatus] = useState("loading");
 
   /* CART COUNT */
   const [cartCount, setCartCount] =
@@ -172,26 +189,15 @@ function Marketplace({ buyer }) {
   const [showAllCategories, setShowAllCategories] =
     useState(false);
 
+  const [activeView, setActiveView] = useState("marketplace");
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          "http://127.0.0.1:8000/products/"
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            "Failed to load products"
-          );
-        }
-
-        const data =
-          await response.json();
-
-        setProducts(data);
+        setProducts((await getAllProducts()).filter((product) => !product.is_upcoming));
       } catch (err) {
         console.error(err);
 
@@ -206,54 +212,33 @@ function Marketplace({ buyer }) {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    if (!buyer?.id) return;
+    getCart(buyer.id)
+      .then((items) => setCartCount(items.reduce((total, item) => total + (item.cartQuantity || 0), 0)))
+      .catch(() => {});
+  }, [buyer?.id]);
+
+  useEffect(() => {
+    getTrendingProducts(buyer?.location)
+      .then((result) => { setAiTrends(result.top_products || []); setAiStatus("ready"); })
+      .catch(() => { setAiTrends([]); setAiStatus("offline"); });
+  }, [buyer?.location]);
+
   /* ADD PRODUCT TO CART */
-  const handleAddToCart = (product) => {
-    const savedCart =
-      JSON.parse(
-        localStorage.getItem("annam.cart")
-      ) || [];
-
-    const existingProduct =
-      savedCart.find(
-        (item) => item.id === product.id
-      );
-
-    let updatedCart;
-
-    if (existingProduct) {
-      updatedCart = savedCart.map(
-        (item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                cartQuantity:
-                  (item.cartQuantity || 1) + 1,
-              }
-            : item
-      );
-    } else {
-      updatedCart = [
-        ...savedCart,
-        {
-          ...product,
-          cartQuantity: 1,
-        },
-      ];
+  const handleAddToCart = async (product) => {
+    if (!buyer?.id) {
+      setError("Your buyer account is still syncing. Please wait a moment and try again.");
+      return;
     }
-
-    localStorage.setItem(
-      "annam.cart",
-      JSON.stringify(updatedCart)
-    );
-
-    const totalItems =
-      updatedCart.reduce(
-        (total, item) =>
-          total + (item.cartQuantity || 1),
-        0
-      );
-
-    setCartCount(totalItems);
+    try {
+      setError("");
+      await addCartItem(buyer.id, product.id);
+      const items = await getCart(buyer.id);
+      setCartCount(items.reduce((total, item) => total + (item.cartQuantity || 0), 0));
+    } catch (error) {
+      setError(error.message || "Could not add this product to your cart.");
+    }
   };
 
   const filteredProducts =
@@ -310,11 +295,10 @@ function Marketplace({ buyer }) {
       }
     );
 
-  const getProductImage = (
-    productName
-  ) => {
+  const getProductImage = (product) => {
+    if (product.image_url) return product.image_url;
     const name =
-      productName?.toLowerCase() || "";
+      product.name?.toLowerCase() || "";
 
     const matchedImage =
       Object.keys(productImages).find(
@@ -322,9 +306,10 @@ function Marketplace({ buyer }) {
           name.includes(key)
       );
 
-    return matchedImage
-      ? productImages[matchedImage]
-      : productImages.default;
+    if (matchedImage) return productImages[matchedImage];
+    const category = product.category?.toLowerCase() || "";
+    const categoryKey = Object.keys(categoryImageKeys).find((key) => category.includes(key));
+    return categoryKey ? productImages[categoryImageKeys[categoryKey]] : productImages.default;
   };
 
   /* FIRST 5 CATEGORIES */
@@ -365,10 +350,8 @@ function Marketplace({ buyer }) {
 
           {/* MARKETPLACE */}
           <button
-            className="nav-item active"
-            onClick={() =>
-              navigate("/marketplace")
-            }
+            className={`nav-item ${activeView === "marketplace" ? "active" : ""}`}
+            onClick={() => setActiveView("marketplace")}
           >
             <span className="nav-icon">
               ▦
@@ -379,10 +362,8 @@ function Marketplace({ buyer }) {
 
           {/* ORDERS */}
           <button
-            className="nav-item"
-            onClick={() =>
-              navigate("/orders")
-            }
+            className={`nav-item ${activeView === "orders" ? "active" : ""}`}
+            onClick={() => setActiveView("orders")}
           >
             <span className="nav-icon">
               □
@@ -393,16 +374,19 @@ function Marketplace({ buyer }) {
 
           {/* TRACK DELIVERY */}
           <button
-            className="nav-item"
-            onClick={() =>
-              navigate("/track-delivery")
-            }
+            className={`nav-item ${activeView === "delivery" ? "active" : ""}`}
+            onClick={() => setActiveView("delivery")}
           >
             <span className="nav-icon">
               ⌁
             </span>
 
             {t("trackDelivery")}
+          </button>
+
+          <button className="nav-item" onClick={() => navigate("/ai-insights")}>
+            <span className="nav-icon">✦</span>
+            AI Insights
           </button>
 
         </nav>
@@ -522,7 +506,17 @@ function Marketplace({ buyer }) {
         </header>
 
         {/* PAGE CONTENT */}
-        <section className="marketplace-content">
+        {activeView === "orders" ? <ConsumerOrdersPanel /> : activeView === "delivery" ? <ConsumerTrackingPanel /> : <section className="marketplace-content">
+
+          <section className="card" style={{ marginBottom: "24px", borderColor: "#bbf7d0", background: "#f0fdf4" }}>
+            <p className="section-kicker">ANNAM AI PICKS</p>
+            <h2 style={{ margin: "4px 0 12px" }}>High-demand near {buyer?.location || "you"}</h2>
+            {aiStatus === "loading" && <p>Loading demand insights…</p>}
+            {aiStatus === "offline" && <p>AI insights are unavailable. Start the main backend on port 8000 to show local demand recommendations.</p>}
+            {aiTrends.length > 0 && <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+              {aiTrends.map((trend) => <button key={trend.product} type="button" className="secondary-btn" onClick={() => setSearchTerm(trend.product)}>{trend.product} · {Math.round(trend.predicted_qty_kg)} kg · {trend.trend}</button>)}
+            </div>}
+          </section>
 
           {/* CATEGORY SECTION */}
           <div className="section-header">
@@ -720,14 +714,14 @@ function Marketplace({ buyer }) {
                       key={product.id}
                     >
 
-                      <div className="product-image-container">
+                      <div className="product-image-container" style={{ "--product-photo": `url("${getProductImage(product)}")` }}>
 
                         <img
-                          src={getProductImage(
-                            product.name
-                          )}
+                          src={getProductImage(product)}
                           alt={product.name}
                           className="product-image"
+                          loading="lazy"
+                          onError={(event) => { event.currentTarget.src = productImages.default; }}
                         />
 
                         <span
@@ -822,7 +816,7 @@ function Marketplace({ buyer }) {
 
             )}
 
-        </section>
+        </section>}
 
       </main>
 

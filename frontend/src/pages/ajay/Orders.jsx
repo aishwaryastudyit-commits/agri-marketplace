@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { cancelOrder, getOrders } from "../../services/orderService";
+import { productImageFor } from "../../utils/productImages";
 import "../../styles/orders.css";
 
 const statusClass = (status) => status.toLowerCase().replaceAll(" ", "-");
@@ -12,7 +13,7 @@ function Orders() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getOrders()
+    getOrders(JSON.parse(localStorage.getItem("annam-buyer") || "null")?.id)
       .then(setOrders)
       .catch(() => setError("We could not load your orders."))
       .finally(() => setLoading(false));
@@ -61,7 +62,7 @@ function Orders() {
             </div>
 
             <div className="order-product">
-              <div className="product-icon" aria-hidden="true">{order.product.charAt(0)}</div>
+              <img className="order-product-image" src={order.image_url || productImageFor(order.product)} alt="" />
               <div><strong>{order.product}</strong><span>From {order.farmer}</span></div>
             </div>
 
@@ -76,6 +77,7 @@ function Orders() {
               <time>{order.date}</time>
               <div className="order-actions">
                 <Link to={`/orders/${order.id}`} className="secondary-btn">Details</Link>
+                {order.status !== "Delivered" && order.status !== "Cancelled" && <Link to="/track-delivery" className="secondary-btn">Track delivery</Link>}
                 {order.status === "Pending" && <button className="danger-btn" onClick={() => handleCancel(order.id)}>Cancel</button>}
                 {order.paymentStatus === "Pending" && order.status !== "Cancelled" && <Link to={`/payment/${order.id}`} className="primary-btn">Pay now</Link>}
               </div>

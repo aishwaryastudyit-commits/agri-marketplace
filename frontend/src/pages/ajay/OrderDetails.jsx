@@ -22,7 +22,10 @@ function OrderDetails() {
         <dl className="detail-list">
           <div><dt>Quantity</dt><dd>{order.quantity} kg</dd></div><div><dt>Unit price</dt><dd>₹{order.price} / kg</dd></div><div><dt>Payment status</dt><dd>{order.paymentStatus}</dd></div><div className="total-row"><dt>Total amount</dt><dd>₹{order.total}</dd></div>
         </dl>
-        {order.paymentStatus === "Pending" && order.status !== "Cancelled" && <Link to={`/payment/${order.id}`} className="primary-btn">Make payment</Link>}
+        <div className="detail-actions">
+          {order.status !== "Delivered" && order.status !== "Cancelled" && <Link to="/track-delivery" className="secondary-btn">Track delivery</Link>}
+          {order.paymentStatus === "Pending" && order.status !== "Cancelled" && <Link to={`/payment/${order.id}`} className="primary-btn">Make payment</Link>}
+        </div>
       </section>
     </main>
   );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import "../bulkBuyer.css";
+import { upsertBuyer } from "../../../services/annamService";
 
 function BulkBuyerLogin({ onLogin }) {
   const navigate = useNavigate();
@@ -331,7 +332,7 @@ function BulkBuyerLogin({ onLogin }) {
      FORM SUBMIT
   ========================= */
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!businessName.trim()) {
@@ -385,9 +386,13 @@ function BulkBuyerLogin({ onLogin }) {
       buyer_type: "bulk_buyer",
     };
 
-    onLogin(bulkBuyerData);
-
-    navigate("/bulk-marketplace");
+    try {
+      const savedBuyer = await upsertBuyer(bulkBuyerData);
+      onLogin({ ...bulkBuyerData, ...savedBuyer });
+      navigate("/bulk-marketplace");
+    } catch (error) {
+      alert(error.message || "Could not connect to ANNAM. Please try again.");
+    }
   };
 
   return (

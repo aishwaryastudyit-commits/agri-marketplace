@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Smartphone,
   Truck,
@@ -6,21 +6,14 @@ import {
   Package,
   MapPin,
   CheckCircle2,
-  AlertTriangle,
-  Clock,
-  ArrowRight,
-  User,
-  Phone,
-  Shield,
   XCircle,
-  Sparkles,
-  ChevronRight,
   Boxes
 } from 'lucide-react';
 import { useLogistics } from '../context/LogisticsContext';
 import Button from '../components/Button';
 import StatusBadge from '../components/StatusBadge';
 import { calculateShortage } from '../utils/shortageCalculator';
+import { transitionDelivery, updateDeliveryLocation } from '../../../services/annamService';
 
 export default function WorkerWorkspace() {
   const {
@@ -28,32 +21,47 @@ export default function WorkerWorkspace() {
     workers,
     updateJobStatus,
     updatePickupStop,
-    setActiveTab,
     assignWorkerToJob
   } = useLogistics();
 
   // Simulated logged-in driver (default Arun Kumar, WRK-101)
-  const [activeDriverId, setActiveDriverId] = useState('WRK-101');
+  const [activeDriverId, setActiveDriverId] = useState(() => JSON.parse(localStorage.getItem('annam-worker') || 'null')?.worker_id || 'WRK-101');
   const [activeJobId, setActiveJobId] = useState('JOB-1024');
+  const [actionError, setActionError] = useState('');
 
   // Input states for stop weighing
   const [stopWeights, setStopWeights] = useState({});
 
-  const activeDriver = workers.find(w => w.id === activeDriverId) || workers[0];
-  const assignedJobs = jobs.filter(j => j.assignedWorkerId === activeDriverId || j.assignedWorker === activeDriver.name);
+  const activeDriver = workers.find(w => String(w.id) === String(activeDriverId)) || workers[0];
+  const assignedJobs = jobs.filter(j => String(j.assignedWorkerId) === String(activeDriverId) || j.assignedWorker === activeDriver.name);
   const availableJobs = jobs.filter(j => j.status === 'AVAILABLE');
 
   // Currently focused job on driver terminal
   const currentJob = jobs.find(j => j.jobId === activeJobId) || assignedJobs[0] || availableJobs[0] || jobs[0];
 
-  const handleAcceptJob = (job) => {
-    assignWorkerToJob(job.jobId, activeDriver.id);
+  const handleAcceptJob = async (job) => {
+    setActionError('');
+    const result = await assignWorkerToJob(job.jobId, activeDriver.id);
+    if (!result?.success) {
+      setActionError(result?.message || 'Could not accept this delivery job.');
+      return;
+    }
     setActiveJobId(job.jobId);
   };
 
-  const handleStatusStep = (nextStatus) => {
+  const handleStatusStep = async (nextStatus) => {
     if (!currentJob) return;
-    updateJobStatus(currentJob.jobId, nextStatus);
+    setActionError('');
+    if (currentJob.deliveryId) {
+      const location = nextStatus === 'DELIVERED' ? currentJob.deliveryLocation : `${nextStatus.replaceAll('_', ' ').toLowerCase()} — ${currentJob.pickupLocations}`;
+      await Promise.all([
+        transitionDelivery(currentJob.deliveryId, nextStatus.toLowerCase().replaceAll(' ', '_')),
+        updateDeliveryLocation(currentJob.deliveryId, location, `${currentJob.pickupLocations} → ${currentJob.deliveryLocation}`),
+      ]).then(() => updateJobStatus(currentJob.jobId, nextStatus))
+        .catch((error) => setActionError(error.message || 'Could not update the delivery job.'));
+    } else {
+      updateJobStatus(currentJob.jobId, nextStatus);
+    }
   };
 
   const handleCancelDelivery = () => {
@@ -99,6 +107,8 @@ export default function WorkerWorkspace() {
           </div>
         </div>
       </div>
+
+      {actionError && <p role="alert" style={{ color: '#b91c1c', fontWeight: '700', margin: '0 0 16px' }}>{actionError}</p>}
 
       {/* Driver Status Card */}
       <div style={{
@@ -179,11 +189,11 @@ export default function WorkerWorkspace() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <MapPin size={16} color="#15803d" />
-                  <span><strong>Pickup:</strong> {currentJob.pickupLocations}</span>
+                  <span><strong>Pickup:</strong> {currentJob.farmer || 'Farmer'} · {currentJob.pickupLocations}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <MapPin size={16} color="#7c3aed" />
-                  <span><strong>Dropoff:</strong> {currentJob.deliveryLocation}</span>
+                  <span><strong>Dropoff:</strong> {currentJob.buyer || 'Buyer'} · {currentJob.deliveryLocation}</span>
                 </div>
               </div>
 
@@ -455,7 +465,7 @@ export default function WorkerWorkspace() {
                         <span style={{ fontSize: '0.8rem', color: '#15803d', fontWeight: '700' }}>{job.product}</span>
                       </div>
                       <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>
-                        Load: <strong>{job.quantity} KG</strong> • Route: {job.pickupLocations} &rarr; {job.deliveryLocation}
+                        {job.farmer || job.pickupLocations} &rarr; {job.buyer || job.deliveryLocation} • Load: <strong>{job.quantity} KG</strong>
                       </div>
                     </div>
 

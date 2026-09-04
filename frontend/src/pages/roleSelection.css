@@ -18,6 +18,7 @@
 .role-back-button { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 9px 0; border: 0; background: transparent; color: var(--role-green); font-weight: 700; cursor: pointer; }
 .role-login-icon { margin-bottom: 18px; }
 .role-login-form { display: grid; gap: 16px; margin-top: 24px; }
+.role-login-message { margin: 16px 0 0; padding: 11px 13px; border: 1px solid #a8cdb4; border-radius: 9px; color: var(--role-green); background: #edf7ef; font-size: .9rem; font-weight: 600; }
 .role-login-form label { display: grid; gap: 7px; color: var(--role-ink); font-weight: 700; font-size: .9rem; }
 .role-login-form input { width: 100%; padding: 12px 13px; border: 1px solid var(--role-line); border-radius: 9px; background: white; color: var(--role-ink); outline: none; }
 .role-login-form input:focus { border-color: var(--role-green); box-shadow: 0 0 0 3px rgba(21,91,67,.12); }

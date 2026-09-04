@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr
 
 from app.core.database import get_db
 from app.services import auth_service
+from app.core.security import create_access_token
 
 
 router = APIRouter()
@@ -89,6 +90,8 @@ def login(
 
         return {
             "message": "Login successful",
+            "access_token": create_access_token(user),
+            "token_type": "bearer",
             "user": {
                 "id": user.id,
                 "full_name": user.full_name,

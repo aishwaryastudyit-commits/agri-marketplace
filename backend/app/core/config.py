@@ -35,5 +35,21 @@ class Settings:
     def get_db_sslmode():
         return os.getenv("DB_SSLMODE") or os.getenv("sslmode") or "require"
 
+    @staticmethod
+    def get_cors_origins():
+        """Return the browser origins permitted to call the API.
+
+        Comma-separate values in ``CORS_ORIGINS`` make deployments configurable
+        without exposing database credentials to the frontend.
+        """
+        configured = os.getenv("CORS_ORIGINS", "")
+        if configured:
+            return [origin.strip() for origin in configured.split(",") if origin.strip()]
+
+        return [
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
+
 
 settings = Settings()

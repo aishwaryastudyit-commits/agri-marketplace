@@ -9,6 +9,13 @@ from app.core.config import settings
 def build_database_url() -> str:
     database_url = settings.get_database_url()
     if database_url:
+        # Supabase's dashboard commonly supplies a ``postgresql://`` URI.  This
+        # project installs psycopg (v3), so make the driver explicit for
+        # SQLAlchemy instead of relying on the unavailable psycopg2 default.
+        if database_url.startswith("postgresql://"):
+            return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        if database_url.startswith("postgres://"):
+            return database_url.replace("postgres://", "postgresql+psycopg://", 1)
         return database_url
 
     db_user = settings.get_db_user()

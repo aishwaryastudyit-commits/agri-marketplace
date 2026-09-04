@@ -1,0 +1,15 @@
+.bulk-record-list { display: grid; gap: 16px; }
+.bulk-record-card { position: relative; background: #fff; border: 1px solid #d7e3dc; border-radius: 16px; padding: 22px 24px; box-shadow: 0 8px 25px rgba(0, 60, 40, .05); }
+.bulk-record-card h3 { margin: 0 0 7px; color: #0d5a40; font-size: 21px; }
+.bulk-record-card p { margin: 5px 0; color: #60766c; font-size: 14px; }
+.bulk-record-card > strong { display: block; margin-top: 14px; color: #0d5a40; font-size: 20px; }
+.bulk-record-card .bulk-payment-success { color: #0d5a40; }
+.bulk-record-empty { padding: 50px 24px; background: #fff; border: 1px dashed #b7cec1; border-radius: 16px; color: #60766c; text-align: center; }
+.bulk-route-line { color: #0d5a40 !important; font-size: 17px !important; font-weight: 700; }
+.bulk-route-progress { height: 8px; margin: 18px 0 9px; overflow: hidden; border-radius: 99px; background: #dcefe2; }
+.bulk-route-progress span { display: block; width: 62%; height: 100%; border-radius: inherit; background: #155b43; }
+.bulk-record-card .bulk-payment-id { margin-bottom: 8px; color: #58766a; letter-spacing: 1.2px; font-size: 12px; }
+.bulk-confirm-harvest { margin-top: 16px; padding: 10px 14px; border: 0; border-radius: 9px; color: #fff; background: #0d5a40; font-weight: 700; cursor: pointer; }
+.bulk-confirm-harvest:hover { background: #073d2c; }
+.bulk-harvest-wait { margin-top: 16px !important; padding: 10px 12px; border-radius: 9px; color: #77551e !important; background: #fff5dc; }
+@media (max-width: 600px) { .bulk-record-card { padding: 18px; } }

@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   LayoutDashboard, Package, Calendar, Truck, Wallet, 
   Plus, Sparkles, Mic, Globe, Trash2, 
   HelpCircle, X, Bell, User, CheckCircle2 
 } from 'lucide-react';
+import './FarmerModule.css';
+import { createFarmerProduct, createFarmerUpcomingHarvest, getFarmerOrders, getFarmerProducts, getFarmerUpcomingHarvests, getFarmerWallet, markFarmerReadyForPickup, publishFarmerHarvest, updateFarmer } from '../../../services/annamService';
 
 const TRANSLATIONS = {
   en: {
@@ -191,7 +193,7 @@ const POPULAR_CROPS = [
   { id: 'chilli', name: 'Green Chilli', local: 'பச்சை மிளகாய்', icon: '🌶️', mandiPrice: 65 },
 ];
 
-export default function FarmerModule() {
+export default function FarmerModule({ farmer }) {
   const [lang, setLang] = useState('en');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
@@ -216,6 +218,8 @@ export default function FarmerModule() {
   });
 
   const t = TRANSLATIONS[lang];
+  const [syncError, setSyncError] = useState('');
+  const [walletBalance, setWalletBalance] = useState(0);
 
   const [products, setProducts] = useState([
     { id: 1, name: 'Ponni Raw Rice', local: 'பொன்னி அரிசி', qty: 1200, unit: 'kg', price: 52, channel: 'Bulk Only', icon: '🌾' },
@@ -223,9 +227,7 @@ export default function FarmerModule() {
     { id: 3, name: 'Red Onion', local: 'சின்ன வெங்காயம்', qty: 450, unit: 'kg', price: 35, channel: 'Retail & Bulk', icon: '🧅' },
   ]);
 
-  const [harvests, setHarvests] = useState([
-    { id: 1, name: 'Fresh Potatoes', local: 'உருளைக்கிழங்கு', expectedQty: 1500, unit: 'kg', harvestDate: '2026-09-18', channel: 'Bulk Pooled', status: 'Pooling Active' },
-  ]);
+  const [harvests, setHarvests] = useState([]);
 
   const [orders, setOrders] = useState([
     { 
@@ -272,6 +274,22 @@ export default function FarmerModule() {
     channel: 'Both'
   });
 
+  useEffect(() => {
+    if (!farmer?.id) return;
+    setProfile((current) => ({ ...current, name: farmer.full_name || farmer.name || current.name, phone: farmer.phone || current.phone, district: farmer.location || current.district }));
+    Promise.all([getFarmerProducts(farmer.id), getFarmerUpcomingHarvests(farmer.id), getFarmerOrders(farmer.id), getFarmerWallet(farmer.id)])
+      .then(([listingData, harvestData, orderData, wallet]) => {
+        setProducts(listingData.map((item) => ({ ...item, qty: item.quantity, channel: 'Both', icon: '📦' })));
+        setHarvests(harvestData.map((item) => ({
+          ...item, expectedQty: item.quantity, harvestDate: item.harvest_date,
+          channel: 'Bulk Pooled', status: 'Planned harvest'
+        })));
+        setOrders(orderData.map((item) => ({ ...item, crop: item.product, qty: `${item.quantity} kg`, amount: item.total_amount, orderType: item.buyer_type === 'bulk' ? 'Bulk buyer' : 'Consumer', pickupSlot: item.created_at, driver: item.assigned_driver || 'Driver to be assigned' })));
+        setWalletBalance(wallet.available_balance || 0);
+      })
+      .catch((error) => setSyncError(error.message || 'Could not load your live farm data.'));
+  }, [farmer?.id]);
+
   const handleVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return alert("Please use Google Chrome for voice assistance.");
@@ -291,7 +309,32 @@ export default function FarmerModule() {
     rec.start();
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
+    if (farmer?.id) {
+      try {
+        const listing = {
+          name: formData.crop?.name || 'Produce', category: 'Produce', quantity: formData.qty,
+          unit: 'kg', price: formData.price, farmer_name: profile.name, farmer_id: farmer?.id,
+          location: profile.district, description: `${formData.channel} farmer listing`,
+          harvest_date: formData.isUpcoming ? formData.harvestDate : null,
+        };
+        if (formData.isUpcoming) {
+          const created = await createFarmerUpcomingHarvest(listing);
+          setHarvests([...harvests, { ...created, expectedQty: created.quantity, harvestDate: created.harvest_date, channel: formData.channel === 'bulk' ? 'Bulk Only' : formData.channel === 'retail' ? 'Retail Only' : 'Retail & Bulk', status: 'Scheduled' }]);
+          setActiveTab('harvest');
+        } else {
+          const created = await createFarmerProduct(listing);
+          setProducts([...products, { ...created, qty: created.quantity, channel: formData.channel, icon: formData.crop?.icon || '📦' }]);
+          setActiveTab('inventory');
+        }
+        setShowWizard(false);
+        setWizardStep(1);
+        setFormData({ crop: null, isUpcoming: false, qty: 100, price: 30, harvestDate: '2026-09-08', channel: 'Both' });
+      } catch (error) {
+        setSyncError(error.message || 'Could not publish this listing.');
+      }
+      return;
+    }
     if (formData.isUpcoming) {
       setHarvests([...harvests, {
         id: Date.now(),
@@ -300,8 +343,8 @@ export default function FarmerModule() {
         expectedQty: formData.qty,
         unit: 'kg',
         harvestDate: formData.harvestDate,
-        channel: formData.channel === 'bulk' ? 'Bulk Pooled' : 'Retail & Bulk',
-        status: 'Pooling Active'
+        channel: formData.channel === 'bulk' ? 'Bulk Only' : formData.channel === 'retail' ? 'Retail Only' : 'Retail & Bulk',
+        status: 'Scheduled'
       }]);
       setActiveTab('harvest');
     } else {
@@ -322,15 +365,48 @@ export default function FarmerModule() {
     setFormData({ crop: null, isUpcoming: false, qty: 100, price: 30, harvestDate: '2026-09-08', channel: 'Both' });
   };
 
-  const togglePickup = (id) => {
-    setOrders(orders.map(o => o.id === id ? {
-      ...o,
-      status: o.status === 'Ready for Pickup' ? 'Handed to Driver' : 'Ready for Pickup'
-    } : o));
+  const togglePickup = async (id) => {
+    const order = orders.find((item) => item.id === id);
+    if (!order?.delivery_id || !farmer?.id) {
+      setSyncError('This order will be available for farm handover after payment creates its logistics job.');
+      return;
+    }
+    try {
+      const delivery = await markFarmerReadyForPickup(order.delivery_id, farmer.id);
+      setOrders((current) => current.map((item) => item.id === id ? {
+        ...item, current_location: delivery.current_location, delivery_status: delivery.delivery_status
+      } : item));
+      setSyncError('');
+    } catch (error) {
+      setSyncError(error.message || 'Could not share the farm pickup update with logistics.');
+    }
+  };
+
+  const publishHarvest = async (harvest) => {
+    if (!farmer?.id) return setSyncError('Your farmer identity is missing. Please sign in again.');
+    try {
+      const product = await publishFarmerHarvest(harvest.id, farmer.id);
+      setHarvests((current) => current.filter((item) => item.id !== harvest.id));
+      setProducts((current) => [...current, { ...product, qty: product.quantity, channel: harvest.channel || 'Both', icon: harvest.icon || '📦' }]);
+      setActiveTab('inventory');
+    } catch (error) {
+      setSyncError(error.message || 'Could not publish this harvest.');
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!farmer?.id) return setSyncError('Your farmer identity is missing. Please sign in again.');
+    try {
+      await updateFarmer(farmer.id, { full_name: profile.name, phone: profile.phone, location: profile.district });
+      setIsProfileModalOpen(false);
+    } catch (error) {
+      setSyncError(error.message || 'Could not save profile changes.');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F0] text-slate-900 flex font-sans relative">
+    <div className="farmer-module min-h-screen bg-[#F7F6F0] text-slate-900 flex font-sans relative" data-wallet-balance={walletBalance}>
+      {syncError && <div className="fixed top-4 right-4 z-50 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">{syncError}</div>}
       
       {/* SIDEBAR */}
       <aside className="w-64 bg-[#102820] text-white flex flex-col justify-between shrink-0 p-4 min-h-screen z-10">
@@ -595,15 +671,16 @@ export default function FarmerModule() {
                       <h4 className="font-bold text-sm text-gray-900 mt-1">{h.name} {h.local && `(${h.local})`}</h4>
                       <p className="text-xs text-gray-500">Expected: <strong>{h.expectedQty} {h.unit}</strong> | Harvest Date: <strong>{h.harvestDate}</strong></p>
                     </div>
-                    <button 
-                      onClick={() => setHarvests(harvests.filter(item => item.id !== h.id))}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl"
-                      title="Remove Harvest"
-                    >
-                      <Trash2 className="w-4 h-4" />
+                    <button onClick={() => publishHarvest(h)} className="px-3 py-2 bg-[#1F6B45] text-white rounded-xl text-xs font-bold" title="Publish as live product">
+                      Publish as product
                     </button>
                   </div>
                 ))}
+                {!harvests.length && <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 p-8 text-center">
+                  <p className="font-bold text-sm text-[#1F6B45]">No upcoming harvests scheduled yet</p>
+                  <p className="mt-1 text-xs text-gray-600">Select “Schedule Harvest” to save your crop, expected quantity, harvest date, and selling channel.</p>
+                  <button onClick={() => { setShowWizard(true); setFormData({ ...formData, isUpcoming: true }); setWizardStep(1); }} className="mt-4 rounded-xl bg-[#1F6B45] px-4 py-2 text-xs font-bold text-white">Schedule Harvest</button>
+                </div>}
               </div>
             </div>
           )}
@@ -633,12 +710,12 @@ export default function FarmerModule() {
                     <button
                       onClick={() => togglePickup(o.id)}
                       className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                        o.status === 'Ready for Pickup' 
+                        o.current_location === 'Farm gate: produce ready for pickup'
                           ? 'bg-[#1F6B45] text-white hover:bg-[#165335]' 
                           : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       }`}
                     >
-                      {o.status === 'Ready for Pickup' ? t.buttons.markReady : t.buttons.markDispatched}
+                      {o.current_location === 'Farm gate: produce ready for pickup' ? 'Ready for driver' : t.buttons.markReady}
                     </button>
                   </div>
                 ))}
@@ -737,7 +814,7 @@ export default function FarmerModule() {
               </div>
 
               <button 
-                onClick={() => setIsProfileModalOpen(false)}
+                onClick={saveProfile}
                 className="w-full py-3 bg-[#1F6B45] hover:bg-[#165335] text-white rounded-xl text-xs font-bold transition shadow-sm"
               >
                 {t.labels.saveProfile}
@@ -886,6 +963,18 @@ export default function FarmerModule() {
                     />
                   </div>
 
+                  {formData.isUpcoming && <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Expected Harvest Date</label>
+                    <input
+                      type="date"
+                      value={formData.harvestDate}
+                      min={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setFormData({ ...formData, harvestDate: e.target.value })}
+                      className="w-full p-2 border rounded-xl text-sm font-bold outline-none focus:border-[#1F6B45]"
+                    />
+                    <p className="mt-1 text-[11px] text-gray-500">This crop stays private and cannot be ordered until you publish it as a product.</p>
+                  </div>}
+
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">Supply Mode Allocation</label>
                     <select
@@ -922,6 +1011,7 @@ export default function FarmerModule() {
                 <div className="p-4 bg-[#F7F6F0] rounded-xl space-y-2 text-xs">
                   <div className="flex justify-between"><span>Produce:</span><strong>{formData.crop?.name}</strong></div>
                   <div className="flex justify-between"><span>Type:</span><strong>{formData.isUpcoming ? 'Future Harvest' : 'Ready Stock'}</strong></div>
+                  {formData.isUpcoming && <div className="flex justify-between"><span>Harvest date:</span><strong>{formData.harvestDate}</strong></div>}
                   <div className="flex justify-between"><span>Channel:</span><strong>{formData.channel}</strong></div>
                   <div className="flex justify-between"><span>Total:</span><strong>{formData.qty} kg @ ₹{formData.price}/kg</strong></div>
                   <div className="flex justify-between pt-2 border-t font-bold text-[#1F6B45] text-sm">
@@ -945,7 +1035,7 @@ export default function FarmerModule() {
                 </button>
               ) : (
                 <button onClick={handlePublish} className="px-6 py-2 bg-[#1F6B45] text-white rounded-xl text-xs font-bold">
-                  Publish Crop
+                  {formData.isUpcoming ? 'Save Scheduled Harvest' : 'Publish Crop'}
                 </button>
               )}
             </div>

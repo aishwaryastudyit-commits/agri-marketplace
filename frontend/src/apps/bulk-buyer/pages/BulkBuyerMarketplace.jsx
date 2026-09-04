@@ -1,7 +1,11 @@
-import { useState } from "react";
+/* eslint-disable no-unreachable */
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext.jsx";
 import "../bulkBuyer.css";
+import { getAllProducts, getUpcomingHarvests } from "../../../services/annamService";
+import { getCart, saveCart, saveOrder, savePayment } from "../bulkBuyerData.js";
+import { getBulkSupplyMatch } from "../../../services/aiService";
 
 function BulkBuyerMarketplace({ bulkBuyer }) {
   const navigate = useNavigate();
@@ -25,7 +29,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
     useState(false);
 
 
-  const products = [
+  const [products, setProducts] = useState([
     {
       id: 1,
       name: "Fresh Tomatoes",
@@ -62,7 +66,21 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
       description:
         "Bulk quantity onions available for wholesale procurement.",
     },
-  ];
+  ]);
+  const [apiError, setApiError] = useState("");
+  const [upcomingHarvests, setUpcomingHarvests] = useState([]);
+  const [aiMatch, setAiMatch] = useState(null);
+  const [aiMatchStatus, setAiMatchStatus] = useState("ready");
+  const [cartCount, setCartCount] = useState(() => getCart(bulkBuyer?.id).reduce((count, item) => count + item.quantity, 0));
+
+  useEffect(() => {
+    Promise.all([getAllProducts(), getUpcomingHarvests()])
+      .then(([liveProducts, harvests]) => {
+        setProducts(liveProducts);
+        setUpcomingHarvests(harvests);
+      })
+      .catch((error) => setApiError(error.message || "Could not load marketplace listings."));
+  }, []);
 
   const categories = [
     {
@@ -88,6 +106,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
   ];
 
   const filteredProducts = products.filter((item) => {
+    if (item.is_upcoming) return false;
     const matchesCategory =
       category === "All Products" ||
       item.category === category;
@@ -103,12 +122,15 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
     return matchesCategory && matchesSearch;
   });
 
+  const visibleUpcomingHarvests = upcomingHarvests.filter((item) => (
+    category === "All Products" || item.category === category
+  ) && `${item.name} ${item.farmer_name || ""} ${item.location || ""} ${item.category}`.toLowerCase().includes(search.toLowerCase()));
 
   /* =========================
      FIND SUPPLIERS
   ========================= */
 
-  const handleFindSuppliers = (event) => {
+  const handleFindSuppliers = async (event) => {
     event.preventDefault();
 
     if (!product.trim()) {
@@ -161,6 +183,60 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
 
     setSelectedProduct(matchingProduct);
     setRequirementConfirmed(false);
+    setAiMatchStatus("loading");
+    getBulkSupplyMatch(matchingProduct.name, deliveryLocation || bulkBuyer?.location, requiredQuantity)
+      .then((result) => { setAiMatch(result); setAiMatchStatus("ready"); })
+      .catch(() => { setAiMatch(null); setAiMatchStatus("offline"); });
+  };
+
+  const confirmRequirement = () => {
+    setSelectedProduct({ ...selectedProduct, requirementId: selectedProduct.id });
+    setRequirementConfirmed(true);
+  };
+
+  const addToCart = (item, requestedQuantity, requestedLocation = deliveryLocation) => {
+    if (!bulkBuyer?.id) return setApiError("Your buyer account is not linked. Please sign in again.");
+    const amount = Number(requestedQuantity);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > Number(item.quantity)) return setApiError(`Enter a quantity from 1 to ${item.quantity} ${item.unit}.`);
+    const cart = getCart(bulkBuyer.id);
+    const existing = cart.find((cartItem) => cartItem.product_id === item.id);
+    const nextQuantity = (existing?.quantity || 0) + amount;
+    if (nextQuantity > Number(item.quantity)) return setApiError(`Only ${item.quantity} ${item.unit} of ${item.name} is available.`);
+    const nextCart = existing
+      ? cart.map((cartItem) => cartItem.product_id === item.id ? { ...cartItem, quantity: nextQuantity, deliveryLocation: requestedLocation || cartItem.deliveryLocation } : cartItem)
+      : [...cart, { product_id: item.id, name: item.name, farmer: item.farmer_name, price: Number(item.price), unit: item.unit, quantity: amount, availableQuantity: Number(item.quantity), deliveryLocation: requestedLocation || bulkBuyer.location || "" }];
+    saveCart(bulkBuyer.id, nextCart);
+    setCartCount(nextCart.reduce((count, cartItem) => count + cartItem.quantity, 0));
+    setApiError("");
+    return;
+    /* Legacy local browser persistence intentionally left unreachable for old sessions. */
+    const order = saveOrder({
+      requirementId: selectedProduct.requirementId,
+      product: selectedProduct.name,
+      farmer: selectedProduct.farmer_name,
+      quantity: Number(quantity),
+      unit,
+      amount: Number(quantity) * Number(selectedProduct.price),
+      deliveryLocation,
+      route: `${selectedProduct.location} → ${deliveryLocation}`,
+      status: "Order Confirmed",
+    });
+    savePayment({
+      orderId: order.id,
+      product: order.product,
+      farmer: order.farmer,
+      quantity: `${order.quantity} ${order.unit}`,
+      amount: order.amount,
+      method: "UPI",
+    });
+    alert(`Payment successful. Order ${order.id} has been created.`);
+    navigate("/bulk-orders");
+  };
+
+  const addConfirmedRequirementToCart = () => {
+    addToCart(selectedProduct, quantity, deliveryLocation);
+    setRequirementConfirmed(false);
+    setSelectedProduct(null);
   };
 
 
@@ -185,6 +261,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
 
   return (
     <div className="bulk-app">
+      {apiError && <div className="bulk-api-error" role="alert">{apiError}</div>}
 
       {/* ================= SIDEBAR ================= */}
 
@@ -239,7 +316,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
             type="button"
             className="bulk-sidebar-link"
             onClick={() =>
-              navigate("/bulk-requirements")
+              navigate("/bulk-orders")
             }
           >
             <span className="bulk-nav-icon">
@@ -247,7 +324,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
             </span>
 
             <span>
-              {t("My Requirements")}
+              {t("Bulk Orders")}
             </span>
           </button>
 
@@ -283,6 +360,11 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
             <span>
               {t("trackDelivery")}
             </span>
+          </button>
+
+          <button type="button" className="bulk-sidebar-link" onClick={() => navigate("/bulk-ai-insights")}>
+            <span className="bulk-nav-icon">✦</span>
+            <span>AI Insights</span>
           </button>
 
           <button
@@ -357,6 +439,10 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
           {/* RIGHT ACTIONS */}
 
           <div className="bulk-top-actions">
+
+            <button type="button" className="bulk-notification-button" onClick={() => navigate("/bulk-cart")} aria-label="Bulk cart">
+              Cart{cartCount ? ` (${cartCount})` : ""}
+            </button>
 
 
             {/* NOTIFICATIONS */}
@@ -540,6 +626,11 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
 
             </form>
 
+            <div className="bulk-result-card" style={{ marginTop: "18px", border: "1px solid #86efac", background: "#f0fdf4" }}>
+              <p className="bulk-section-kicker">ANNAM AI PROCUREMENT MATCHING</p>
+              <p>{aiMatchStatus === "offline" ? "AI insights are unavailable. Start the main backend on port 8000 to generate supplier matches." : aiMatchStatus === "loading" ? "Analysing farmer availability and demand…" : "Enter a product requirement to receive an AI supply match."}</p>
+            </div>
+
           </section>
 
 
@@ -548,6 +639,12 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
           {selectedProduct && !requirementConfirmed && (
 
             <section className="bulk-search-result-section">
+
+              {aiMatch && <div className="bulk-result-card" style={{ marginBottom: "18px", border: "1px solid #86efac", background: "#f0fdf4" }}>
+                <p className="bulk-section-kicker">ANNAM AI SUPPLY MATCH</p>
+                <h3>{Math.round(aiMatch.fulfillment_percentage || 0)}% of your requirement can be fulfilled</h3>
+                <p>{aiMatch.farmers_used || 0} recommended farms · estimated average ₹{Number(aiMatch.avg_price_per_kg || 0).toFixed(2)}/kg</p>
+              </div>}
 
               <p className="bulk-section-kicker">
                 SUPPLIER FOUND
@@ -688,9 +785,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
                   <button
                     type="button"
                     className="bulk-find-button"
-                    onClick={() =>
-                      setRequirementConfirmed(true)
-                    }
+                    onClick={confirmRequirement}
                   >
                     Confirm Requirement →
                   </button>
@@ -839,13 +934,9 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
                   <button
                     type="button"
                     className="bulk-payment-button"
-                    onClick={() =>
-                      alert(
-                        "Payment gateway will open here."
-                      )
-                    }
+                    onClick={addConfirmedRequirementToCart}
                   >
-                    💳 Make Payment
+                    Add to cart
                   </button>
 
                 </div>
@@ -905,6 +996,20 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
 
 
           {/* ================= PRODUCTS ================= */}
+
+          <section className="bulk-available-section">
+            <div className="bulk-products-header"><div><p className="bulk-section-kicker">PLAN AHEAD</p><h2>Upcoming harvests</h2></div><span className="bulk-product-count">{visibleUpcomingHarvests.length} future listing{visibleUpcomingHarvests.length === 1 ? "" : "s"}</span></div>
+            <p className="bulk-product-description">View planned harvests from matching farmers. They become purchasable when the farmer publishes them as available produce.</p>
+            <div className="bulk-products-grid">
+              {visibleUpcomingHarvests.map((item) => <div className="bulk-product-card" key={item.id}>
+                <div className="bulk-product-top"><p className="bulk-product-category">UPCOMING · {item.category}</p><span className="bulk-product-price">₹{item.price}<small> / {item.unit}</small></span></div>
+                <h3>{item.name}</h3><p className="bulk-product-description">{item.description || "Upcoming farm harvest available for bulk reservation."}</p>
+                <div className="bulk-card-line" />
+                <div className="bulk-product-info"><p><strong>Farmer:</strong> {item.farmer_name}</p><p><strong>Harvest date:</strong> {item.harvest_date || "To be confirmed"}</p><p><strong>Expected quantity:</strong> {item.quantity} {item.unit}</p></div>
+                <div className="bulk-product-bottom"><div className="bulk-quantity-box"><span>Planned harvest</span><strong>{item.location}</strong></div><span className="bulk-request-button">Available after harvest</span></div>
+              </div>)}
+            </div>
+          </section>
 
           <section className="bulk-available-section">
 
@@ -1028,8 +1133,12 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
                       <button
                         type="button"
                         className="bulk-request-button"
+                        onClick={() => {
+                          const requested = window.prompt(`How many ${item.unit} of ${item.name} do you need?`, "1");
+                          if (requested !== null) addToCart(item, requested);
+                        }}
                       >
-                        {t("requestQuantity")}
+                        Add to cart
                       </button>
 
                     </div>

@@ -10,6 +10,7 @@ import { checkWorkerCompatibility } from '../utils/compatibility';
 import { calculateShortage, createShortageReport } from '../utils/shortageCalculator';
 import { optimizeRoute } from '../utils/routeOptimizer';
 import { buildDeliveryJobFromGroup } from '../utils/orderGrouper';
+import { dispatchDelivery, getDeliveries, getLogisticsWorkers, registerLogisticsWorker } from '../../../services/annamService';
 
 const LogisticsContext = createContext(null);
 
@@ -26,6 +27,54 @@ export function LogisticsProvider({ children }) {
   const [isRegisterWorkerOpen, setIsRegisterWorkerOpen] = useState(false);
   const [activeDriverJobId, setActiveDriverJobId] = useState('JOB-1024');
 
+  // Paid marketplace orders appear in the driver console as live jobs. The
+  // local seed jobs remain available for the logistics planning demo.
+  useEffect(() => {
+    let active = true;
+    const loadDeliveries = async () => {
+      try {
+        const deliveries = await getDeliveries();
+        if (!active) return;
+        const liveJobs = deliveries.map((delivery) => ({
+          id: `LIVE-${delivery.id}`,
+          jobId: `LIVE-${delivery.id}`,
+          deliveryId: delivery.id,
+          orderId: `ORDER-${delivery.order_id}`,
+          product: delivery.product || `Order #${delivery.order_id}`,
+          buyer: delivery.buyer || 'Buyer',
+          farmer: delivery.farmer || 'Farmer',
+          quantity: Number(delivery.quantity || 0),
+          pickupLocations: delivery.pickup_location || 'Farmer pickup',
+          deliveryLocation: delivery.delivery_address,
+          assignedWorker: delivery.assigned_driver || null,
+          status: ['pending', 'confirmed'].includes((delivery.delivery_status || '').toLowerCase())
+            ? 'AVAILABLE'
+            : (delivery.delivery_status || 'AVAILABLE').toUpperCase().replaceAll('_', ' '),
+          pickupStops: [{ id: `delivery-${delivery.id}-pickup`, farmerName: delivery.farmer || 'Farmer', location: delivery.pickup_location || 'Farm gate', product: delivery.product, expectedQuantity: Number(delivery.quantity || 0), status: 'Pending' }],
+        }));
+        setJobs((existing) => [...existing.filter((job) => !job.deliveryId), ...liveJobs]);
+      } catch {
+        // Backend may be offline while the standalone logistics planner is used.
+      }
+    };
+    loadDeliveries();
+    const interval = setInterval(loadDeliveries, 15000);
+    return () => { active = false; clearInterval(interval); };
+  }, []);
+
+  // A dispatcher session upgrades the workspace from demo fleet data to the
+  // persistent worker and vehicle registry.
+  useEffect(() => {
+    if (!localStorage.getItem('annam-access-token')) return;
+    getLogisticsWorkers().then((rows) => setWorkers(rows.map(({ worker, vehicle }) => ({
+      id: worker.id, name: worker.full_name, phone: worker.phone,
+      availability: worker.availability === 'available' ? 'Available' : 'On Route',
+      vehicleId: vehicle?.id, vehicleType: vehicle?.vehicle_type || 'Unassigned',
+      vehicleNumber: vehicle?.registration_number || '—', vehicleCapacity: vehicle?.capacity_kg || 0,
+      currentStatus: worker.availability === 'available' ? 'Ready for Dispatch' : 'On Route', activeDelivery: null,
+    })))).catch(() => {});
+  }, []);
+
   // Stats calculation
   const stats = {
     activeDeliveries: jobs.filter(j => ['GOING TO PICKUP', 'PICKING UP', 'PICKED UP', 'OUT FOR DELIVERY'].includes(j.status)).length,
@@ -41,15 +90,23 @@ export function LogisticsProvider({ children }) {
   /**
    * Assign a worker to a job with capacity compatibility check
    */
-  const assignWorkerToJob = (jobId, workerId) => {
+  const assignWorkerToJob = async (jobId, workerId) => {
     const targetJob = jobs.find(j => j.id === jobId || j.jobId === jobId);
-    const targetWorker = workers.find(w => w.id === workerId);
+    const targetWorker = workers.find(w => String(w.id) === String(workerId));
 
     if (!targetJob || !targetWorker) return { success: false, message: 'Job or worker not found' };
 
     const comp = checkWorkerCompatibility(targetWorker, targetJob);
     if (!comp.isCompatible) {
       return { success: false, message: comp.message };
+    }
+
+    if (targetJob.deliveryId) {
+      try {
+        await dispatchDelivery(targetJob.deliveryId, targetWorker.id, targetWorker.vehicleId);
+      } catch (error) {
+        return { success: false, message: error.message || 'Could not save worker assignment' };
+      }
     }
 
     // Update job
@@ -217,7 +274,16 @@ export function LogisticsProvider({ children }) {
   /**
    * Register a new worker
    */
-  const registerWorker = (workerData) => {
+  const registerWorker = async (workerData) => {
+    if (localStorage.getItem('annam-access-token')) {
+      const { worker, vehicle } = await registerLogisticsWorker({
+        full_name: workerData.name, phone: workerData.phone, vehicle_registration: workerData.vehicleNumber,
+        vehicle_type: workerData.vehicleType, capacity_kg: Number(workerData.vehicleCapacity),
+      });
+      const persistedWorker = { id: worker.id, name: worker.full_name, phone: worker.phone, vehicleId: vehicle.id, vehicleType: vehicle.vehicle_type, vehicleNumber: vehicle.registration_number, vehicleCapacity: vehicle.capacity_kg, availability: 'Available', currentStatus: 'Ready for Dispatch', activeDelivery: null, rating: 5, completedTrips: 0 };
+      setWorkers(prev => [persistedWorker, ...prev]);
+      return persistedWorker;
+    }
     const newId = `WRK-${Math.floor(108 + Math.random() * 890)}`;
     const newWorker = {
       id: newId,

@@ -52,12 +52,7 @@ def create_bulk_order(
             "order_count": len(orders),
             "orders": [
                 {
-                    "id": order.id,
-                    "buyer_id": order.buyer_id,
-                    "product_id": order.product_id,
-                    "quantity": order.quantity,
-                    "total_amount": order.total_amount,
-                    "status": order.status
+                    **bulk_order_service.bulk_order_payload(order)
                 }
                 for order in orders
             ]
@@ -100,12 +95,7 @@ def get_buyer_bulk_orders(
             "order_count": len(orders),
             "orders": [
                 {
-                    "id": order.id,
-                    "product_id": order.product_id,
-                    "quantity": order.quantity,
-                    "total_amount": order.total_amount,
-                    "status": order.status,
-                    "created_at": order.created_at
+                    **order
                 }
                 for order in orders
             ]
@@ -137,13 +127,7 @@ def get_bulk_order(
         )
 
         return {
-            "id": order.id,
-            "buyer_id": order.buyer_id,
-            "product_id": order.product_id,
-            "quantity": order.quantity,
-            "total_amount": order.total_amount,
-            "status": order.status,
-            "created_at": order.created_at
+            **bulk_order_service.bulk_order_payload(order)
         }
 
     except ValueError as error:

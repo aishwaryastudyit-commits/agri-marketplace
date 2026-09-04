@@ -70,12 +70,13 @@ const request = async (
    GET ALL ORDERS
 ================================ */
 
-export const getOrders = async () => {
+export const getOrders = async (buyerId) => {
   if (USE_MOCKS) {
     return readMockOrders();
   }
 
-  return request("/orders/");
+  const activeBuyerId = buyerId || JSON.parse(localStorage.getItem("annam-buyer") || "null")?.id;
+  return request(activeBuyerId ? `/orders/?buyer_id=${activeBuyerId}` : "/orders/");
 };
 
 
@@ -232,7 +233,7 @@ export const makePayment = async ({
     as query parameters.
   */
 
-  return request(
+  const payment = await request(
     `/payments/?order_id=${orderId}&payment_method=${encodeURIComponent(
       paymentMethod
     )}`,
@@ -240,4 +241,8 @@ export const makePayment = async ({
       method: "POST"
     }
   );
+
+  // The demo checkout completes immediately. Confirming it here creates the
+  // linked delivery record on the backend in the same user flow.
+  return request(`/payments/${payment.id}/success`, { method: "PUT" });
 };

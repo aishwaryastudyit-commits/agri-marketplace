@@ -203,13 +203,15 @@ const POPULAR_CROPS = [
   { id: 'chilli', name: 'Green Chilli', local: 'பச்சை மிளகாய்', icon: '🌶️', mandiPrice: 65 },
 ];
 
-export default function FarmerModule() {
+export default function FarmerModule({ initialTab = 'dashboard' }) {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
   const [lang, setLang] = useState('en');
   
   // 1. Auth & Profile State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ name: '', email: '' });
   const [profile, setProfile] = useState({
+    id: null,
     name: '',
     email: '',
     phone: '',
@@ -223,7 +225,7 @@ export default function FarmerModule() {
 
   // App Workflow State
   const [tourStep, setTourStep] = useState(0);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [isListening, setIsListening] = useState(false);
@@ -292,20 +294,38 @@ export default function FarmerModule() {
   });
 
   // Handle Initial Login
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!loginForm.name || !loginForm.email) return;
-    setProfile(prev => ({
-      ...prev,
-      name: loginForm.name,
-      email: loginForm.email,
-      phone: prev.phone || '98401 XXXXX',
-      district: prev.district || 'Coimbatore, Tamil Nadu'
-    }));
-    setIsLoggedIn(true);
+    const phone = profile.phone || '9840100000';
+    try {
+      const response = await fetch(`${API_BASE_URL}/farmers/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: loginForm.name,
+          phone,
+          location: profile.district || 'Coimbatore, Tamil Nadu',
+          farm_name: 'ANNAM Farm'
+        })
+      });
+      if (!response.ok && response.status !== 400) throw new Error('Farmer registration failed');
+      const farmer = response.ok ? await response.json() : {};
+      setProfile(prev => ({ ...prev, id: farmer.id || prev.id, name: loginForm.name, email: loginForm.email, phone, district: prev.district || 'Coimbatore, Tamil Nadu' }));
+      setIsLoggedIn(true);
+    } catch (error) {
+      alert(error.message || 'Unable to connect to the farmer service.');
+    }
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
+    if (profile.id) {
+      await fetch(`${API_BASE_URL}/farmers/${profile.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: profile.name, phone: profile.phone, location: profile.district })
+      });
+    }
     setProfile(prev => ({ ...prev, isCompleted: true }));
     setIsProfileModalOpen(false);
     setShowProfileBanner(false);

@@ -1,8 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
 
-:root { --primary: #155b43; --primary-dark: #0d3f30; --mint: #dcefe2; --cream: #f5f4ed; --surface: #fffefa; --ink: #17332a; --muted: #6d7c74; --line: #dfe7df; --danger: #b9493f; --warning: #9a671e; --shadow: 0 16px 40px rgba(25, 61, 44, .08); --radius: 14px; }
+:root { --primary: #155b43; --primary-dark: #0d3f30; --mint: #dcefe2; --cream: #f5f4ed; --surface: #fffefa; --ink: #17332a; --muted: #6d7c74; --line: #dfe7df; --danger: #b9493f; --warning: #9a671e; --shadow: 0 16px 40px rgba(25, 61, 44, .08); --radius: 14px; color: var(--ink); background: var(--cream); font: 16px/1.5 "DM Sans", sans-serif; color-scheme: light; }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; color: var(--ink); background: radial-gradient(circle at 90% 0%, #e3f1e3 0, transparent 30%), var(--cream); font-family: "DM Sans", sans-serif; }
+#root { width: 100%; max-width: none; min-height: 100vh; margin: 0; display: block; text-align: left; border: 0; }
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }

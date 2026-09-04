@@ -24,6 +24,14 @@ def create_buyer(
     buyer_type: str = "consumer",
     db: Session = Depends(get_db)
 ):
+    existing = db.query(Buyer).filter(Buyer.phone == phone).first()
+    if existing:
+        existing.full_name = full_name
+        existing.location = location or existing.location
+        existing.buyer_type = buyer_type or existing.buyer_type
+        db.commit()
+        db.refresh(existing)
+        return existing
     buyer = Buyer(
         full_name=full_name,
         phone=phone,
@@ -35,6 +43,15 @@ def create_buyer(
     db.commit()
     db.refresh(buyer)
 
+    return buyer
+
+
+@router.get("/phone/{phone}")
+def get_buyer_by_phone(phone: str, db: Session = Depends(get_db)):
+    buyer = db.query(Buyer).filter(Buyer.phone == phone).first()
+    if not buyer:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Buyer not found")
     return buyer
 
 

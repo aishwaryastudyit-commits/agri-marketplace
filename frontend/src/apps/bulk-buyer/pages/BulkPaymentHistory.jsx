@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext.jsx";
+import { getBuyerPayments, getBulkOrders } from "../../../services/annamService";
 import "../bulkBuyer.css";
 
 function BulkPaymentHistory({ bulkBuyer }) {
@@ -15,36 +17,20 @@ function BulkPaymentHistory({ bulkBuyer }) {
     return displayName.charAt(0).toUpperCase();
   };
 
-  /* =========================
-     TEMPORARY PAYMENT DATA
-     ========================= */
-
-  const payments = [
-    {
-      id: "PAY-001",
-      product: "Premium Onions",
-      farmer: "Murugan",
-      quantity: "100 kg",
-      amount: 3000,
-      method: "UPI",
-      date: "31 Aug 2026",
-      time: "09:48 AM",
-      transactionId: "TXN123456789",
-      status: "Successful",
-    },
-    {
-      id: "PAY-002",
-      product: "Farm Potatoes",
-      farmer: "Selvam",
-      quantity: "200 kg",
-      amount: 4400,
-      method: "Credit Card",
-      date: "30 Aug 2026",
-      time: "04:22 PM",
-      transactionId: "TXN987654321",
-      status: "Successful",
-    },
-  ];
+  const [payments, setPayments] = useState([]);
+  const [loadError, setLoadError] = useState("");
+  useEffect(() => {
+    if (!bulkBuyer?.id) return;
+    Promise.all([getBuyerPayments(bulkBuyer.id), getBulkOrders(bulkBuyer.id)])
+      .then(([paymentRows, orderResult]) => {
+        const orderById = new Map((orderResult.orders || []).map((order) => [order.id, order]));
+        setPayments(paymentRows.map((payment) => {
+          const order = orderById.get(payment.order_id) || {};
+          const timestamp = new Date(payment.created_at || order.created_at || Date.now());
+          return { id: `PAY-${payment.id}`, product: order.product || `Order #${payment.order_id}`, farmer: order.farmer || "Farmer", quantity: `${order.quantity || ""} ${order.unit || "kg"}`, amount: Number(payment.amount || order.total_amount || 0), method: payment.payment_method || "UPI", date: timestamp.toLocaleDateString("en-IN"), time: timestamp.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), transactionId: `ANNAM-${payment.id}`, status: payment.payment_status || "Pending" };
+        }));
+      }).catch((error) => setLoadError(error.message || "Could not load payment history."));
+  }, [bulkBuyer?.id]);
 
   return (
     <div className="bulk-app">
@@ -98,7 +84,7 @@ function BulkPaymentHistory({ bulkBuyer }) {
             type="button"
             className="bulk-sidebar-link"
             onClick={() =>
-              navigate("/bulk-requirements")
+              navigate("/bulk-orders")
             }
           >
             <span className="bulk-nav-icon">
@@ -106,7 +92,7 @@ function BulkPaymentHistory({ bulkBuyer }) {
             </span>
 
             <span>
-              {t("myRequirements")}
+              {t("bulkOrders")}
             </span>
           </button>
 
@@ -248,6 +234,8 @@ function BulkPaymentHistory({ bulkBuyer }) {
         {/* ================= CONTENT ================= */}
 
         <div className="bulk-content">
+
+          {loadError && <p className="bulk-api-error" role="alert">{loadError}</p>}
 
           <section className="bulk-page-header">
 

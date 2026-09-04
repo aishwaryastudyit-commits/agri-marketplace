@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext";
 import "../consumer.css";
+import { upsertBuyer } from "../../../services/annamService";
 
 function ConsumerLogin({ onLogin }) {
   const navigate = useNavigate();
@@ -223,7 +224,7 @@ function ConsumerLogin({ onLogin }) {
   };
 
   // Submit form
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!fullName.trim()) {
@@ -246,7 +247,7 @@ function ConsumerLogin({ onLogin }) {
       return;
     }
 
-    onLogin({
+    const buyer = {
       full_name: fullName.trim(),
       country_code: countryCode,
       phone: `${countryCode}${phone}`,
@@ -254,9 +255,14 @@ function ConsumerLogin({ onLogin }) {
       location: location.trim(),
       phone_verified: true,
       buyer_type: "consumer",
-    });
-
-    navigate("/marketplace");
+    };
+    try {
+      const savedBuyer = await upsertBuyer(buyer);
+      onLogin({ ...buyer, ...savedBuyer });
+      navigate("/marketplace");
+    } catch (error) {
+      alert(error.message || "Could not connect to ANNAM. Please try again.");
+    }
   };
 
   return (

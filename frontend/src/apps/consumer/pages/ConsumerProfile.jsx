@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext.jsx";
 import "../consumer.css";
+import { upsertBuyer } from "../../../services/annamService";
 
 const languageOptions = [
   { value: "english", label: "English" },
@@ -37,7 +38,7 @@ function ConsumerProfile({ buyer, onUpdateBuyer }) {
     buyer?.address || ""
   );
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault();
 
     if (!fullName.trim()) {
@@ -56,9 +57,13 @@ function ConsumerProfile({ buyer, onUpdateBuyer }) {
       buyer_type: buyer?.buyer_type || "consumer",
     };
 
-    onUpdateBuyer(updatedBuyer);
-
-    alert("Profile updated successfully!");
+    try {
+      const savedBuyer = await upsertBuyer(updatedBuyer);
+      onUpdateBuyer({ ...updatedBuyer, ...savedBuyer });
+      alert("Profile updated successfully!");
+    } catch (error) {
+      alert(error.message || "Could not save your profile.");
+    }
   };
 
   const handleLanguageChange = (event) => {

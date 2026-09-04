@@ -1,0 +1,41 @@
+.buyer-workflow { max-width: 1180px; padding-top: 42px; }
+.workflow-header-actions, .workflow-actions, .notification-toolbar, .cart-item-footer, .cart-summary-row { display: flex; align-items: center; gap: 12px; }
+.workflow-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+.workflow-actions { margin-top: 22px; flex-wrap: wrap; }
+.workflow-kicker { color: var(--primary); font-size: .82rem; font-weight: 700; }
+.cart-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, .8fr); gap: 24px; align-items: start; }
+.cart-list, .notification-list { display: grid; gap: 14px; }
+.cart-item { display: grid; grid-template-columns: 108px 1fr auto; gap: 18px; padding: 18px; }
+.cart-product-image { width: 108px; height: 132px; border-radius: 12px; object-fit: cover; background: var(--mint); }
+.cart-item h2 { margin: 5px 0 7px; font: 600 1.25rem "Space Grotesk", sans-serif; }
+.cart-item p { margin: 0; color: var(--muted); }
+.cart-item-price { color: var(--primary) !important; font-weight: 700; }
+.cart-item-footer { margin-top: 18px; flex-wrap: wrap; }
+.cart-item-total { color: var(--ink); font-size: 1.1rem; margin-left: auto; }
+.quantity-controls { display: inline-flex; align-items: center; min-height: 42px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: white; }
+.quantity-controls button { width: 40px; height: 40px; border: 0; color: var(--primary); background: transparent; font-size: 1.25rem; transition: background .18s ease; }
+.quantity-controls button:hover { background: var(--mint); }
+.quantity-controls span { min-width: 38px; text-align: center; font-weight: 700; }
+.cart-summary { position: sticky; top: 22px; padding: 26px; }
+.cart-summary h2 { margin-top: 0; }
+.cart-summary-row { justify-content: space-between; padding: 13px 0; color: var(--muted); border-bottom: 1px solid var(--line); }
+.cart-summary-total { padding: 18px 0; color: var(--ink); font: 700 1.4rem "Space Grotesk", sans-serif; }
+.cart-summary .primary-btn { width: 100%; min-height: 48px; }
+.cart-summary-note { margin: 15px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+.cart-notice { color: var(--primary-dark); background: var(--mint); border: 1px solid #c9e2ce; }
+.notification-toolbar { justify-content: space-between; margin: 0 0 20px; flex-wrap: wrap; }
+.notification-filters { display: flex; gap: 8px; }
+.notification-filter { padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: white; font-weight: 700; }
+.notification-filter.active, .notification-filter:hover { color: var(--primary); background: var(--mint); border-color: #c7dfcb; }
+.notification-card { padding: 0; overflow: hidden; transition: transform .18s ease, border-color .18s ease; }
+.notification-card:hover { transform: translateY(-2px); border-color: #b9d6c0; }
+.notification-card.unread { border-left: 4px solid var(--primary); }
+.notification-card-button { width: 100%; padding: 21px; border: 0; background: transparent; color: inherit; text-align: left; }
+.notification-card-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.notification-card h2 { margin: 0; font: 600 1.1rem "Space Grotesk", sans-serif; }
+.notification-card p { margin: 10px 0; color: var(--muted); line-height: 1.55; }
+.notification-card time { color: var(--muted); font-size: .8rem; }
+.notification-card .status { color: var(--primary); background: var(--mint); }
+.notification-card.is-read .status { color: var(--muted); background: #eef1ee; }
+@media (max-width: 820px) { .cart-layout { grid-template-columns: 1fr; } .cart-summary { position: static; } }
+@media (max-width: 580px) { .buyer-workflow { padding: 30px 16px 56px; } .page-header { flex-direction: column; } .workflow-header-actions { justify-content: flex-start; } .cart-item { grid-template-columns: 88px 1fr; } .cart-product-image { width: 88px; height: 112px; } .cart-item-footer { grid-column: 1 / -1; } .cart-item-total { margin-left: 0; } .notification-card-top { align-items: flex-start; flex-direction: column; gap: 8px; } }

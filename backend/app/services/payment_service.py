@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 
 from app.models.payment import Payment
 from app.models.order import Order
+from app.models.buyer import Buyer
+from app.models.delivery import Delivery
+from app.services.notification_service import create_notification
 
 
 # =========================================================
@@ -10,6 +13,16 @@ from app.models.order import Order
 
 def get_all_payments(db: Session):
     return db.query(Payment).all()
+
+
+def get_buyer_payments(db: Session, buyer_id: int):
+    return (
+        db.query(Payment)
+        .join(Order, Payment.order_id == Order.id)
+        .filter(Order.buyer_id == buyer_id)
+        .order_by(Payment.id.desc())
+        .all()
+    )
 
 
 # =========================================================
@@ -80,9 +93,29 @@ def mark_payment_successful(
     # Confirm order
     order.status = "confirmed"
 
+    # New orders already create their delivery job.  Keep this fallback for
+    # older records that predate the immediate logistics handoff.
+    existing_delivery = db.query(Delivery).filter(Delivery.order_id == order.id).first()
+    if not existing_delivery:
+        buyer = db.query(Buyer).filter(Buyer.id == order.buyer_id).first()
+        delivery = Delivery(
+            order_id=order.id,
+            delivery_address=(buyer.location if buyer and buyer.location else "Address to be confirmed"),
+            delivery_status="pending",
+            tracking_number=f"ANNAM-{order.id:06d}",
+            current_location="Order confirmed",
+            route="Farmer → Collection hub → Delivery address",
+        )
+        db.add(delivery)
+
     db.commit()
     db.refresh(payment)
     db.refresh(order)
+
+    create_notification(
+        db, order.buyer_id, "Payment confirmed",
+        f"Your order #{order.id} is confirmed and has been sent to logistics.", "success"
+    )
 
     return {
         "message": "Payment successful and order confirmed",

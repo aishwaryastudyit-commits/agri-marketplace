@@ -14,13 +14,21 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%PORT% ^| findstr LISTENING'
 )
 
 :: Create venv if missing
-IF NOT EXIST "venv\Scripts\python.exe" (
-    echo Creating virtual environment...
-    python -m venv venv 2>nul || py -m venv venv 2>nul || python3 -m venv venv
-)
+IF NOT EXIST "venv\Scripts\python.exe" GOTO CREATE_VENV
+IF NOT EXIST "venv\Scripts\pip.exe" GOTO CREATE_VENV
+GOTO INSTALL_DEPS
 
+:CREATE_VENV
+IF EXIST "venv" (
+    echo Replacing incomplete virtual environment...
+    rmdir /S /Q "venv"
+)
+echo Creating virtual environment...
+    python -m venv venv 2>nul || py -m venv venv 2>nul || python3 -m venv venv
+
+:INSTALL_DEPS
 echo Checking and installing dependencies...
-call .\venv\Scripts\pip.exe install -r requirements.txt
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
 
 IF NOT EXIST "data\demand_history.csv" (
     echo Generating initial dataset...
