@@ -28,6 +28,7 @@ from app.models.base import Base
 from app.models.user import User
 from app.models.product import Product
 from app.models.upcoming_harvest import UpcomingHarvest
+from app.models.harvest_reservation import HarvestReservation
 from app.models.farmer import Farmer
 from app.models.order import Order
 from app.models.payment import Payment

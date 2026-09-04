@@ -37,6 +37,8 @@ export const createFarmerUpcomingHarvest = (harvest) => request("/upcoming-harve
   method: "POST", body: JSON.stringify(harvest),
 });
 export const getUpcomingHarvests = () => request("/upcoming-harvests/");
+export const reserveUpcomingHarvest = (harvestId, reservation) => request(`/upcoming-harvests/${harvestId}/reserve`, { method: "POST", body: JSON.stringify(reservation) });
+export const getHarvestReservations = (buyerId) => request(`/upcoming-harvests/reservations/buyer/${buyerId}`);
 export const publishFarmerHarvest = (harvestId, farmerId) => request(`/upcoming-harvests/${harvestId}/publish?${query({ farmer_id: farmerId })}`, { method: "POST" });
 export const updateFarmer = (farmerId, farmer) => request(`/farmers/${farmerId}`, {
   method: "PATCH", body: JSON.stringify(farmer),

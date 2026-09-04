@@ -14,6 +14,7 @@ import BulkOrders from "./apps/bulk-buyer/pages/BulkOrders";
 import BulkTrackDelivery from "./apps/bulk-buyer/pages/BulkTrackDelivery";
 import BulkCart from "./apps/bulk-buyer/pages/BulkCart";
 import BulkPayment from "./apps/bulk-buyer/pages/BulkPayment";
+import BulkRequirements from "./apps/bulk-buyer/pages/BulkRequirements";
 import LogisticsApp from "./apps/logistics/App";
 import FarmerModule from "./apps/farmer/src/FarmerModule";
 import Orders from "./pages/ajay/Orders";
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/bulk-orders" element={bulkBuyer ? <BulkOrders bulkBuyer={bulkBuyer} /> : <Navigate to="/bulk-login" replace />} />
           <Route path="/bulk-cart" element={bulkBuyer ? <BulkCart bulkBuyer={bulkBuyer} /> : <Navigate to="/bulk-login" replace />} />
           <Route path="/bulk-payment" element={bulkBuyer ? <BulkPayment bulkBuyer={bulkBuyer} /> : <Navigate to="/bulk-login" replace />} />
+          <Route path="/bulk-requirements" element={bulkBuyer ? <BulkRequirements bulkBuyer={bulkBuyer} /> : <Navigate to="/bulk-login" replace />} />
           <Route path="/bulk-track-delivery" element={bulkBuyer ? <BulkTrackDelivery bulkBuyer={bulkBuyer} /> : <Navigate to="/bulk-login" replace />} />
           <Route path="/bulk-ai-insights" element={bulkBuyer ? <AIInsights role="bulk" profile={bulkBuyer} /> : <Navigate to="/bulk-login" replace />} />
 

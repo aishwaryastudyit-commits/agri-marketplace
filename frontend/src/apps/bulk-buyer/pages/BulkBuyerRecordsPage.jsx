@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext.jsx";
 import { formatCurrency } from "../bulkBuyerData.js";
-import { getBulkOrders, getBuyerDeliveries } from "../../../services/annamService";
+import { getBulkOrders, getBuyerDeliveries, getHarvestReservations } from "../../../services/annamService";
 import "../bulkBuyer.css";
 import "../records.css";
 
 const navigation = [
   ["marketplace", "Market place", "/bulk-marketplace"],
+  ["requirements", "My Requirements", "/bulk-requirements"],
   ["orders", "Bulk Orders", "/bulk-orders"],
   ["delivery", "Track Delivery", "/bulk-track-delivery"],
   ["payments", "Payment History", "/bulk-payment-history"],
@@ -19,15 +20,17 @@ function BulkBuyerRecordsPage({ bulkBuyer, mode }) {
   const displayName = bulkBuyer?.full_name || bulkBuyer?.business_name || t("bulkBuyer");
   const [orders, setOrders] = useState([]);
   const [deliveries, setDeliveries] = useState([]);
+  const [requirements, setRequirements] = useState([]);
   const [loadError, setLoadError] = useState("");
   useEffect(() => {
     if (!bulkBuyer?.id) return;
     let active = true;
-    const refresh = () => Promise.all([getBulkOrders(bulkBuyer.id), getBuyerDeliveries(bulkBuyer.id)])
-      .then(([orderResult, deliveryResult]) => {
+    const refresh = () => Promise.all([getBulkOrders(bulkBuyer.id), getBuyerDeliveries(bulkBuyer.id), getHarvestReservations(bulkBuyer.id)])
+      .then(([orderResult, deliveryResult, reservationResult]) => {
         if (!active) return;
         setOrders(orderResult.orders || []);
         setDeliveries(deliveryResult || []);
+        setRequirements(reservationResult || []);
       })
       .catch((error) => setLoadError(error.message || "Could not load your live records."));
     refresh();
@@ -36,6 +39,7 @@ function BulkBuyerRecordsPage({ bulkBuyer, mode }) {
   }, [bulkBuyer?.id]);
   const titles = {
     orders: ["ORDERS", "Bulk Orders", "Confirmed bulk orders placed with farmers."],
+    requirements: ["MY REQUIREMENTS", "Upcoming harvest reservations", "Your reserved future harvests remain here until the farmer publishes them."],
     delivery: ["DELIVERY", "Track Delivery", "Follow the route for each product you have ordered."],
   };
   const [kicker, title, description] = titles[mode];

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../context/LanguageContext.jsx";
 import "../bulkBuyer.css";
-import { getAllProducts, getUpcomingHarvests } from "../../../services/annamService";
+import { getAllProducts, getUpcomingHarvests, reserveUpcomingHarvest } from "../../../services/annamService";
 import { getCart, saveCart, saveOrder, savePayment } from "../bulkBuyerData.js";
 import { getBulkSupplyMatch } from "../../../services/aiService";
 
@@ -69,6 +69,8 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
   ]);
   const [apiError, setApiError] = useState("");
   const [upcomingHarvests, setUpcomingHarvests] = useState([]);
+  const [reservationQuantities, setReservationQuantities] = useState({});
+  const [reservedHarvestIds, setReservedHarvestIds] = useState([]);
   const [aiMatch, setAiMatch] = useState(null);
   const [aiMatchStatus, setAiMatchStatus] = useState("ready");
   const [cartCount, setCartCount] = useState(() => getCart(bulkBuyer?.id).reduce((count, item) => count + item.quantity, 0));
@@ -125,6 +127,21 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
   const visibleUpcomingHarvests = upcomingHarvests.filter((item) => (
     category === "All Products" || item.category === category
   ) && `${item.name} ${item.farmer_name || ""} ${item.location || ""} ${item.category}`.toLowerCase().includes(search.toLowerCase()));
+
+  const reserveHarvest = async (harvest) => {
+    if (!bulkBuyer?.id) return setApiError("Your bulk buyer account is not linked. Please sign in again.");
+    const requestedQuantity = Number(reservationQuantities[harvest.id]);
+    if (!Number.isFinite(requestedQuantity) || requestedQuantity <= 0 || requestedQuantity > Number(harvest.quantity)) {
+      return setApiError(`Enter a reservation quantity from 1 to ${harvest.quantity} ${harvest.unit}.`);
+    }
+    try {
+      await reserveUpcomingHarvest(harvest.id, { buyer_id: bulkBuyer.id, quantity: requestedQuantity, delivery_location: bulkBuyer.location || "" });
+      setReservedHarvestIds((current) => [...current, harvest.id]);
+      setApiError("");
+    } catch (error) {
+      setApiError(error.message || "Could not reserve this upcoming harvest.");
+    }
+  };
 
   /* =========================
      FIND SUPPLIERS
@@ -1006,7 +1023,7 @@ function BulkBuyerMarketplace({ bulkBuyer }) {
                 <h3>{item.name}</h3><p className="bulk-product-description">{item.description || "Upcoming farm harvest available for bulk reservation."}</p>
                 <div className="bulk-card-line" />
                 <div className="bulk-product-info"><p><strong>Farmer:</strong> {item.farmer_name}</p><p><strong>Harvest date:</strong> {item.harvest_date || "To be confirmed"}</p><p><strong>Expected quantity:</strong> {item.quantity} {item.unit}</p></div>
-                <div className="bulk-product-bottom"><div className="bulk-quantity-box"><span>Planned harvest</span><strong>{item.location}</strong></div><span className="bulk-request-button">Available after harvest</span></div>
+                <div className="bulk-product-bottom"><div className="bulk-quantity-box"><span>Planned harvest</span><strong>{item.location}</strong></div><div>{reservedHarvestIds.includes(item.id) ? <button type="button" className="bulk-request-button" onClick={() => navigate("/bulk-requirements")}>Reserved · View requirements</button> : <><input aria-label={`Reserve quantity for ${item.name}`} type="number" min="1" max={item.quantity} value={reservationQuantities[item.id] || ""} onChange={(event) => setReservationQuantities((current) => ({ ...current, [item.id]: event.target.value }))} placeholder="kg" style={{ width: 64, marginRight: 8, padding: "8px", border: "1px solid #b7cec1", borderRadius: 8 }} /><button type="button" className="bulk-request-button" onClick={() => reserveHarvest(item)}>Reserve harvest</button></>}</div></div>
               </div>)}
             </div>
           </section>

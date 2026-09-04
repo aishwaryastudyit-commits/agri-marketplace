@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.product import Product
 from app.models.upcoming_harvest import UpcomingHarvest
+from app.services.harvest_reservation_service import mark_reservations_ready
 
 
 def get_upcoming_harvests(db: Session, farmer_id: int | None = None):
@@ -57,6 +58,7 @@ def publish_upcoming_harvest(db: Session, harvest_id: int, farmer_id: int):
         is_available=harvest.quantity > 0,
     )
     db.add(product)
+    mark_reservations_ready(db, harvest.id)
     db.delete(harvest)
     db.commit()
     db.refresh(product)
